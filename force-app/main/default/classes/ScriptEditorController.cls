@@ -4,7 +4,8 @@ public class ScriptEditorController {
     public String selectedStage {get;set;}
     public String selectedOppType {get;set;}
     public String selectedUserRole {get;set;}
-    public jgaude__Sales_Rep_Script__c scriptObject {get;set;}
+    public Boolean active {get;set;}
+    public Sales_Rep_Script__c scriptObject {get;set;}
 
     public ScriptEditorController() {
         Id id = ApexPages.currentPage().getParameters().get('id');
@@ -13,13 +14,14 @@ public class ScriptEditorController {
     }
 
     public ScriptEditorController(ApexPages.StandardController stdController) {
-        Id recordId = ((jgaude__Sales_Rep_Script__c)stdController.getRecord()).Id;
+        Id recordId = ((Sales_Rep_Script__c)stdController.getRecord()).Id;
         this.scriptObject = getScriptRecord(recordId);
         getFields();
     }
 
     public PageReference saveScript() {
         try {
+            scriptObject.Active__c = this.active;
             upsert scriptObject;
         } catch(System.DMLException e) {
             ApexPages.addMessages(e);
@@ -33,14 +35,15 @@ public class ScriptEditorController {
      * Get field info from object and display it in the form.
      */
     private void getFields() {
-        this.script = this.scriptObject.jgaude__Script__c;
-        this.selectedStage = this.scriptObject.jgaude__OpportunityStage__c;
-        this.selectedOppType = this.scriptObject.jgaude__OpportunityType__c;
-        this.selectedUserRole = this.scriptObject.jgaude__UserRole__c;
+        this.script = this.scriptObject.Script__c;
+        this.selectedStage = this.scriptObject.OpportunityStage__c;
+        this.selectedOppType = this.scriptObject.OpportunityType__c;
+        this.selectedUserRole = this.scriptObject.UserRole__c;
+        this.active = this.scriptObject.Active__c;
     }
 
-    private jgaude__Sales_Rep_Script__c getScriptRecord(Id recordId) {
-        return (recordId == null) ? new jgaude__Sales_Rep_Script__c() : [SELECT Name, jgaude__Script__c, jgaude__OpportunityStage__c, jgaude__OpportunityType__c, jgaude__UserRole__c, jgaude__scriptUser__c, jgaude__Opportunity__c FROM jgaude__Sales_Rep_Script__c WHERE Id = :recordId];
+    private Sales_Rep_Script__c getScriptRecord(Id recordId) {
+        return (recordId == null) ? new Sales_Rep_Script__c() : [SELECT Name, Script__c, OpportunityStage__c, OpportunityType__c, UserRole__c, scriptUser__c, Opportunity__c, Active__c FROM Sales_Rep_Script__c WHERE Id = :recordId];
     }
 
     public List<SelectOption> getStageList() {

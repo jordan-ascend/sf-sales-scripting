@@ -1,48 +1,53 @@
-<apex:page standardController="jgaude__Sales_Rep_Script__c" extensions="ScriptEditorController">
+<apex:page standardController="Sales_Rep_Script__c" extensions="ScriptEditorController">
     <center><h1>Script Editor</h1></center>
 
-    <apex:form>
-        <apex:pageBlock>
+    <apex:pagemessages/>
+    <apex:form >
+        <apex:pageBlock >
             <!-- Script name -->
-            <apex:pageBlockSection>
+            <apex:pageBlockSection >
                 <apex:inputField label="Name" id="script-name" value="{!scriptObject.Name}"/>
             </apex:pageBlockSection>
             <!-- Rich text editor for script -->
-            <apex:pageBlockSection>
-                <apex:inputtextarea label="Script" richtext="true" id="script-text" cols="100" rows="15" value="{!scriptObject.jgaude__Script__c}"/>
+            <apex:pageBlockSection >
+                <apex:inputtextarea label="Script" richtext="true" id="script-text" cols="100" rows="15" value="{!scriptObject.Script__c}"/>
             </apex:pageBlockSection>
             <!-- Stage picklist -->
-            <apex:pageBlockSection>
-                <apex:selectList label="Stage" title="Stage for script to appear." value="{!scriptObject.jgaude__OpportunityStage__c}" multiselect="false" size="1">
+            <apex:pageBlockSection >
+                <apex:selectList label="Stage" title="Stage for script to appear." value="{!scriptObject.OpportunityStage__c}" multiselect="false" size="1">
                     <apex:selectOptions value="{!stageList}"/>
                 </apex:selectList>
             </apex:pageBlockSection>
             <!-- Opportunity Type picklist -->
-            <apex:pageBlockSection>
-                <apex:selectList label="Opportunity Type" title="Opportunity type for script to appear." value="{!scriptObject.jgaude__OpportunityType__c}" multiselect="false" size="1">
+            <apex:pageBlockSection >
+                <apex:selectList label="Opportunity Type" title="Opportunity type for script to appear." value="{!scriptObject.OpportunityType__c}" multiselect="false" size="1">
                     <apex:selectOptions value="{!oppTypeList}"/>
                 </apex:selectList>
             </apex:pageBlockSection>
             <!-- User role -->
-            <apex:pageBlockSection>
-                <apex:selectList label="User Role" title="User role for script to appear." value="{!scriptObject.jgaude__UserRole__c}" multiselect="false" size="1">
+            <apex:pageBlockSection >
+                <apex:selectList label="User Role" title="User role for script to appear." value="{!scriptObject.UserRole__c}" multiselect="false" size="1">
                     <apex:selectOptions value="{!userRoleList}"/>
                 </apex:selectList>
             </apex:pageBlockSection>
             <!-- User -->
-            <apex:pageBlockSection>
-                <apex:inputField label="Opportunity" value="{!scriptObject.jgaude__Opportunity__c}"/>
+            <apex:pageBlockSection >
+                <apex:inputField label="Opportunity" value="{!scriptObject.Opportunity__c}"/>
             </apex:pageBlockSection>
             <!-- User -->
+            <apex:pageBlockSection >
+                <apex:inputField label="User" value="{!scriptObject.scriptUser__c}"/>
+            </apex:pageBlockSection>
+            <!-- Active Checkbox -->
             <apex:pageBlockSection>
-                <apex:inputField label="User" value="{!scriptObject.jgaude__scriptUser__c}"/>
+                <apex:inputCheckbox label="Active" value="{!active}"/>
             </apex:pageBlockSection>
             <!-- Save/Cancel buttons -->
-            <apex:pageBlockButtons>
+            <apex:pageBlockButtons >
                 <apex:commandButton action="{!saveScript}" value="Save"/>
                 <apex:commandButton action="{!cancel}" value="Cancel"/>
             </apex:pageBlockButtons>
         </apex:pageBlock>
     </apex:form>
-    <apex:pageMessages/>
+    <apex:pageMessages />
 </apex:page>

@@ -38,6 +38,8 @@ ehthumbs.db
 $RECYCLE.BIN/
 
 # Classes
+force-app/main/default/classes/accountLayoutController.cls
+force-app/main/default/classes/accountLayoutController.cls-meta.xml
 force-app/main/default/classes/Model_Interface.cls
 force-app/main/default/classes/Model_Interface.cls-meta.xml
 force-app/main/default/classes/ModelA.cls

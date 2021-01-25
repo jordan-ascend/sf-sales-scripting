@@ -1,0 +1,14 @@
+<template >
+    <template if:true={scriptObject.data}>
+        <lightning-card title={scriptObject.data.Name}>
+            <template if:true={scriptObject.data}>
+                <lightning-formatted-rich-text
+                value={scriptObject.data.jgaude__Script__c}
+                ></lightning-formatted-rich-text>
+            </template>
+            <template if:true={error}>
+                <P>{error}</P>
+            </template>
+        </lightning-card>
+    </template>
+</template>

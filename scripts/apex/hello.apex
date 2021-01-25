@@ -1,0 +1,1 @@
+System.debug(AscendUtils.getPicklistValues('not', 'Stage'));

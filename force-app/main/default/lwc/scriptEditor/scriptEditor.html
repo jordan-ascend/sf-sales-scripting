@@ -1,0 +1,45 @@
+<template>
+    <!-- <center><h1>Script Editor</h1></center>
+    <div>
+        <div>
+            <h2>Name</h2>
+            <lightning-input type="text" label="Script name"></lightning-input>
+        </div>
+        <div>
+            <h2>Script</h2>
+            <lightning-input-rich-text></lightning-input-rich-text>
+        </div>
+        <div>
+            <h2>Stage</h2>
+            <lightning-combobox
+            value={value}
+            placeholder="Select Stage"
+            options={options}
+            onchange={handleChange} ></lightning-combobox>
+        </div>
+        <div>
+            <h2>Opportunity Type</h2>
+            <lightning-combobox
+            value={value}
+            placeholder="Select Opportunity Type"
+            options={options}
+            onchange={handleChange} ></lightning-combobox>
+        </div>
+        <div>
+            <h2>User Role</h2>
+            <lightning-combobox
+            value={value}
+            placeholder="Select User Role"
+            options={options}
+            onchange={handleChange} ></lightning-combobox>
+        </div>
+    </div> -->
+    <lightning-record-edit-form record-id="a004W00000do3uiQAA" object-api-name="jgaude__Sales_Rep_Script__c">
+        <h2>Name</h2>
+        <lightning-input-field field-name="Name"></lightning-input-field>
+        <h2>Script</h2>
+        <lightning-input-rich-text></lightning-input-rich-text>
+        <h2>User</h2>
+        <lightning-input-field field-name="jgaude__scriptUser__c"></lightning-input-field>
+    </lightning-record-edit-form>
+</template>

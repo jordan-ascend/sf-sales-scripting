@@ -122,6 +122,27 @@ public class AscendUtils {
         return randNum;
     }
 
+    /**
+     * Appends a string to a delimiter separated set string. As the name implies, the items in the string are unique.
+     * 
+     * Parameters:
+     * String delimitedSet - String that represents a set of items.
+     * String itemToAdd - item to add to the set.
+     * String delimiter - A character that identifies separation between the items.
+     * 
+     * Returns:
+     * String that represents a set of items with the new item.
+     */
+    public static String addToDelimitedSet(String delimitedSet, String itemToAdd, String delimiter) {
+        List<String> deserializedList = delimitedSet.split(delimiter);
+        for(String item: deserializedList) {
+            if(item.endsWithIgnoreCase(itemToAdd))
+                return delimitedSet;
+        }
+        deserializedList.add(itemToAdd);
+        return String.join(deserializedList, delimiter);
+    }
+
     public static UserRole getUserRoleFromId(Id userRoleId) {
         List<UserRole> roles = [SELECT Id, Name FROM UserRole WHERE Id = :userRoleId LIMIT 1];
         if(roles.isEmpty())

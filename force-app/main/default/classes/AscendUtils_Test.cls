@@ -70,4 +70,13 @@ public class AscendUtils_Test {
         System.assertEquals(role1.Id, role2.Id);
         System.assertEquals(null, role3);
     }
+
+    @isTest
+    static void testAddToDelimitedSet() {
+        String str = 'one;two;three';
+        str = AscendUtils.addToDelimitedSet(str, 'four', ';');
+        system.assertEquals('one;two;three;four', str);
+        str = AscendUtils.addToDelimitedSet(str, 'two', ';');
+        system.assertEquals('one;two;three;four', str);
+    }
 }

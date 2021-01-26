@@ -17,12 +17,12 @@ public class ScriptDisplayController {
         System.debug(opp.Type);
         System.debug(opp.StageName);
         
-        List<jgaude__Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
-        jgaude__Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
+        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
+        Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
 
-        // for(jgaude__Sales_Rep_Script__c script: scripts)
+        // for(Sales_Rep_Script__c script: scripts)
         //     System.debug(script);
-        // List<jgaude__Sales_Rep_Script__c> scripts = getScriptObjects(opp.StageName);
+        // List<Sales_Rep_Script__c> scripts = getScriptObjects(opp.StageName);
         // if(scripts.isEmpty())
         //     return null;
         System.debug(scriptToDeliver);
@@ -34,11 +34,11 @@ public class ScriptDisplayController {
      * If any are for other users then we want to remove those before returning.
      * Because if none of the scripts are associated with the user then we assume that the are for any user.
      */
-    private static List<jgaude__Sales_Rep_Script__c> getScriptsWithUser(List<jgaude__Sales_Rep_Script__c> scripts) {
-        List<jgaude__Sales_Rep_Script__c> matchingScripts = new List<jgaude__Sales_Rep_Script__c>();
+    private static List<Sales_Rep_Script__c> getScriptsWithUser(List<Sales_Rep_Script__c> scripts) {
+        List<Sales_Rep_Script__c> matchingScripts = new List<Sales_Rep_Script__c>();
 
-        for(jgaude__Sales_Rep_Script__c script: scripts) {
-            if(script.jgaude__scriptUser__c != null) 
+        for(Sales_Rep_Script__c script: scripts) {
+            if(script.scriptUser__c != null) 
                 matchingScripts.add(script);
         }
 
@@ -55,10 +55,10 @@ public class ScriptDisplayController {
      * the first script will have 3 points and the second will have 2 points. The script or scripts with the most points will
      * be returned.
      */
-    private static jgaude__Sales_Rep_Script__c getMostSpecific(List<jgaude__Sales_Rep_Script__c> scripts) {
-        Map<jgaude__Sales_Rep_Script__c,Integer> scriptMap = new Map<jgaude__Sales_Rep_Script__c,Integer>();
-        jgaude__Sales_Rep_Script__c mostSpecificScript = new jgaude__Sales_Rep_Script__c();
-        mostSpecificScript.jgaude__Script__c = 'No script for this stage.';
+    private static Sales_Rep_Script__c getMostSpecific(List<Sales_Rep_Script__c> scripts) {
+        Map<Sales_Rep_Script__c,Integer> scriptMap = new Map<Sales_Rep_Script__c,Integer>();
+        Sales_Rep_Script__c mostSpecificScript = new Sales_Rep_Script__c();
+        mostSpecificScript.Script__c = 'No script for this stage.';
 
         /**
          * Points are awarded for how high of a priority a filter is. Right now Assigning a user to a script is the highest 
@@ -76,21 +76,21 @@ public class ScriptDisplayController {
          * 
          * This could also allow for the application's users to set the priority of different filters to their needs.
          */
-        for(jgaude__Sales_Rep_Script__c script: scripts) {
+        for(Sales_Rep_Script__c script: scripts) {
             Integer i = 1;
-            if(script.jgaude__scriptUser__c != null)
+            if(script.scriptUser__c != null)
                 i+=8;
-            if(script.jgaude__Opportunity__c != null)
+            if(script.Opportunity__c != null)
                 i+=4;
-            if(script.jgaude__UserRole__c != '-- Any --')
+            if(script.UserRole__c != '-- Any --')
                 i+=2;
-            if(script.jgaude__OpportunityType__c != '-- Any --')
+            if(script.OpportunityType__c != '-- Any --')
                 i+=1;
             scriptMap.put(script, i);
         }
 
         Integer largestNumber = 0;
-        for(jgaude__Sales_Rep_Script__c script: scriptMap.keyset()) {
+        for(Sales_Rep_Script__c script: scriptMap.keyset()) {
             if(scriptMap.get(script) > largestNumber) {
                 largestNumber = scriptMap.get(script);
                 mostSpecificScript = script;
@@ -100,7 +100,7 @@ public class ScriptDisplayController {
         return mostSpecificScript;
     }
 
-    private static List<jgaude__Sales_Rep_Script__c> getHighestPriorirtyScript(List<jgaude__Sales_Rep_Script__c> scripts) {
+    private static List<Sales_Rep_Script__c> getHighestPriorirtyScript(List<Sales_Rep_Script__c> scripts) {
         scripts = getScriptsWithUser(scripts);
         scripts = getScriptsForOpp(scripts);
         return scripts;
@@ -111,11 +111,11 @@ public class ScriptDisplayController {
      * If none are related to the opportunity then return the original list.
      * If any are for other opporunities then we want to remove those before returning.
      */
-    private static List<jgaude__Sales_Rep_Script__c> getScriptsForOpp(List<jgaude__Sales_Rep_Script__c> scripts) {
-        List<jgaude__Sales_Rep_Script__c> matchingScripts = new List<jgaude__Sales_Rep_Script__c>();
+    private static List<Sales_Rep_Script__c> getScriptsForOpp(List<Sales_Rep_Script__c> scripts) {
+        List<Sales_Rep_Script__c> matchingScripts = new List<Sales_Rep_Script__c>();
 
-        for(jgaude__Sales_Rep_Script__c script: scripts) {
-            if(script.jgaude__Opportunity__c != null) 
+        for(Sales_Rep_Script__c script: scripts) {
+            if(script.Opportunity__c != null) 
                 matchingScripts.add(script);
         }
 
@@ -126,13 +126,13 @@ public class ScriptDisplayController {
         return matchingScripts;
     }
 
-    private static List<jgaude__Sales_Rep_Script__c> getScriptObjects(Id oppId, Id userId, String userRoleName, String oppType, String stage) {
-        return [SELECT Name, jgaude__Script__c, jgaude__scriptUser__c, jgaude__UserRole__c, jgaude__Opportunity__c, jgaude__OpportunityType__c
-                FROM jgaude__Sales_Rep_Script__c 
-                WHERE jgaude__OpportunityStage__c = :stage AND (jgaude__scriptUser__c = :userId OR jgaude__scriptUser__c = null)
-                AND (jgaude__Opportunity__c =: OppId OR jgaude__Opportunity__c = null)
-                AND (jgaude__UserRole__c = :userRoleName OR jgaude__UserRole__c = '-- Any --')
-                AND (jgaude__OpportunityType__c = :oppType OR jgaude__OpportunityType__c = '-- Any --')];
+    private static List<Sales_Rep_Script__c> getScriptObjects(Id oppId, Id userId, String userRoleName, String oppType, String stage) {
+        return [SELECT Name, Script__c, scriptUser__c, UserRole__c, Opportunity__c, OpportunityType__c
+                FROM Sales_Rep_Script__c 
+                WHERE OpportunityStage__c = :stage AND (scriptUser__c = :userId OR scriptUser__c = null)
+                AND (Opportunity__c =: OppId OR Opportunity__c = null)
+                AND (UserRole__c = :userRoleName OR UserRole__c = '-- Any --')
+                AND (OpportunityType__c = :oppType OR OpportunityType__c = '-- Any --')];
     }
 
     private static Opportunity getOpportunity(Id OppId) {

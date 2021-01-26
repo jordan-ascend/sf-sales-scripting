@@ -14,21 +14,21 @@ public class ScriptEditorCtrl_Test {
         Test.startTest();
         ScriptEditorController ctrl = new ScriptEditorController();
         ctrl.scriptObject.Name = 'Preamble to the Constitution';
-        ctrl.scriptObject.jgaude__Script__c = getScriptMessage();
-        ctrl.scriptObject.jgaude__OpportunityStage__c = ctrl.getStageList()[0].getValue();
-        ctrl.scriptObject.jgaude__OpportunityType__c = ctrl.getOppTypeList()[0].getValue();
-        ctrl.scriptObject.jgaude__UserRole__c = ctrl.getUserRoleList()[0].getValue();
-        ctrl.scriptObject.jgaude__scriptUser__c = u.Id;
+        ctrl.scriptObject.Script__c = getScriptMessage();
+        ctrl.scriptObject.OpportunityStage__c = ctrl.getStageList()[0].getValue();
+        ctrl.scriptObject.OpportunityType__c = ctrl.getOppTypeList()[0].getValue();
+        ctrl.scriptObject.UserRole__c = ctrl.getUserRoleList()[0].getValue();
+        ctrl.scriptObject.scriptUser__c = u.Id;
         ctrl.saveScript();
         Test.stopTest();
 
-        jgaude__Sales_Rep_Script__c scriptObject = [SELECT Name, jgaude__Script__c, jgaude__OpportunityStage__c, jgaude__OpportunityType__c, jgaude__UserRole__c, jgaude__scriptUser__c FROM jgaude__Sales_Rep_Script__c WHERE Id = :ctrl.scriptObject.Id];
+        Sales_Rep_Script__c scriptObject = [SELECT Name, Script__c, OpportunityStage__c, OpportunityType__c, UserRole__c, scriptUser__c FROM Sales_Rep_Script__c WHERE Id = :ctrl.scriptObject.Id];
         System.debug(scriptObject.Name);
-        System.debug(scriptObject.jgaude__Script__c);
-        System.debug(scriptObject.jgaude__OpportunityStage__c);
-        System.debug(scriptObject.jgaude__OpportunityType__c);
-        System.debug(scriptObject.jgaude__UserRole__c);
-        System.debug(scriptObject.jgaude__scriptUser__c);
+        System.debug(scriptObject.Script__c);
+        System.debug(scriptObject.OpportunityStage__c);
+        System.debug(scriptObject.OpportunityType__c);
+        System.debug(scriptObject.UserRole__c);
+        System.debug(scriptObject.scriptUser__c);
         System.assertEquals('Preamble to the Constitution', scriptObject.Name);
     }
 

@@ -73,7 +73,9 @@ public class AscendUtils_Test {
 
     @isTest
     static void testAddToDelimitedSet() {
-        String str = 'one;two;three';
+        String str = '';
+        str = AscendUtils.addToDelimitedSet(str, 'one;two;three', ';');
+        system.assertEquals('one;two;three', str);
         str = AscendUtils.addToDelimitedSet(str, 'four', ';');
         system.assertEquals('one;two;three;four', str);
         str = AscendUtils.addToDelimitedSet(str, 'two', ';');

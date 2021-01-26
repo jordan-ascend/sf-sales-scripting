@@ -134,6 +134,8 @@ public class AscendUtils {
      * String that represents a set of items with the new item.
      */
     public static String addToDelimitedSet(String delimitedSet, String itemToAdd, String delimiter) {
+        if(String.isBlank(delimitedSet))
+            return itemToAdd;
         List<String> deserializedList = delimitedSet.split(delimiter);
         for(String item: deserializedList) {
             if(item.endsWithIgnoreCase(itemToAdd))

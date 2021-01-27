@@ -1,3 +1,6 @@
+/**
+ * TODO: Write tests.
+ */
 public class ScriptDisplayController {
     public ScriptDisplayController() {}
 
@@ -5,14 +8,12 @@ public class ScriptDisplayController {
     public static jgaude__Sales_Rep_Script__c getScript(Id OppId) {
         System.debug(UserInfo.getUserId());
         System.debug(UserInfo.getUserName());
-        // System.debug(userRoleName);
 
         Id userId = UserInfo.getUserId();
         String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
         userRoleName = userRoleName == null? '-- Any --' : userRoleName;
         Opportunity opp = getOpportunity(OppId);
 
-        
         System.debug(opp);
         System.debug(opp.Type);
         System.debug(opp.StageName);
@@ -20,11 +21,6 @@ public class ScriptDisplayController {
         List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
         Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
 
-        // for(Sales_Rep_Script__c script: scripts)
-        //     System.debug(script);
-        // List<Sales_Rep_Script__c> scripts = getScriptObjects(opp.StageName);
-        // if(scripts.isEmpty())
-        //     return null;
         System.debug(scriptToDeliver);
         return scriptToDeliver;
     }
@@ -137,5 +133,58 @@ public class ScriptDisplayController {
 
     private static Opportunity getOpportunity(Id OppId) {
         return [SELECT StageName, Type FROM Opportunity WHERE Id = :OppId];
+    }
+
+    /**
+     * Handle creation or update of a Script_Metric__c record that will keep track of the scripts used for an opportunity
+     */
+    @testVisible
+    private static void handleMetricObject(Opportunity opp, Sales_Rep_Script__c script) {
+        List<Script_Metric__c> metrics = [SELECT Id FROM Script_Metric__c WHERE Opportunity__c = :opp.Id];
+        Script_Metric__c metric;
+
+        for(Script_Metric__c m: metrics) {
+            if(m.Related_User__c == UserInfo.getUserId()) {
+                metric = m;
+                break;
+            } else if(m.Related_User__c == null) {
+                metric = m;
+            }
+        }
+
+        if(metric == null) {
+            metric = new Script_Metric__c();
+            metric.Opportunity__c = opp.Id;
+            metric.Opportunity_Stage__c = opp.StageName;
+            metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
+            if(opp.StageName == 'Closed Won')
+                metric.jgaude__Opportunity_Won__c = true;
+            else
+                metric.jgaude__Opportunity_Won__c = false;
+            if(script.scriptUser__c == UserInfo.getUserId())
+                metric.Related_User__c = script.scriptUser__c;
+
+            insert metric;
+        } else if(metric != null && metric.Related_User__c == null && script.scriptUser__c == UserInfo.getUserId()) {
+            Script_Metric__c newMetric = new Script_Metric__c();
+            newMetric.Opportunity__c = opp.Id;
+            newMetric.Opportunity_Stage__c = opp.StageName;
+            newMetric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
+            newMetric.Related_User__c = script.scriptUser__c;
+            if(opp.StageName == 'Closed Won')
+                newMetric.jgaude__Opportunity_Won__c = true;
+            else
+                newMetric.jgaude__Opportunity_Won__c = false;
+            insert newMetric;
+        } else {
+            metric.Opportunity_Stage__c = opp.StageName;
+            metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
+            if(opp.StageName == 'Closed Won')
+                metric.jgaude__Opportunity_Won__c = true;
+            else
+                metric.jgaude__Opportunity_Won__c = false;
+            
+            update metric;
+        }
     }
 }

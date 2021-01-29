@@ -186,6 +186,21 @@ public class AscendTestDataFactory {
         return objs;
     }
 
+    /**
+     * Create Sales_Rep_Script__c
+     * Parameters:
+     * howMany - integer of opportunities to create
+     * Returns:
+     * A Sales_Rep_Script__c
+     * 
+     * 
+     * Field Defaults:
+     * Active__c = true
+     * OpportunityStage__c = 'Prospecting'
+     * Script__c = 'This is a test script'
+     * OpportunityType__c = '-- Any --'
+     * UserRole__c = '-- Any --'
+     */
     public static Sales_Rep_Script__c createScript(Map<SObjectField,Object> fields) {
         Sales_Rep_Script__c obj = new Sales_Rep_Script__c(
             Active__c = true,
@@ -200,6 +215,20 @@ public class AscendTestDataFactory {
         return obj;
     }
 
+    /**
+     * Create Script_Metric__c
+     * Parameters:
+     * howMany - integer of opportunities to create
+     * Returns:
+     * A Script_Metric__c
+     * 
+     * 
+     * Field Defaults:
+     * Opportunity__c = Id of given opportunity
+     * Opportunity_Stage__c = Stage of given opportunity
+     * Opportunity_Won__c = Boolean set true if opportunity is won, false otherwise
+     * Scripts_Used__c = '[opportunity stage name]:[given script id]'
+     */
     public static Script_Metric__c createScriptMetric(Sales_Rep_Script__c script, Opportunity opp, Map<SObjectField,Object> fields) {
         Script_Metric__c obj = new Script_Metric__c(
             Opportunity__c = opp.Id,

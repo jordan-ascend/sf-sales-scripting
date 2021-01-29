@@ -3,6 +3,9 @@
  */
 public class ScriptDisplayController {
 
+    /**
+     * Retreives script for opportunity.
+     */
     @AuraEnabled(cacheable=true)
     public static jgaude__Sales_Rep_Script__c getScript(Id oppId) {
         Id userId = UserInfo.getUserId();
@@ -19,7 +22,10 @@ public class ScriptDisplayController {
         return scriptToDeliver;
     }
 
-
+    /**
+     * Looks at the metric object to see if this script has already been read (the 'read' button has been clicked). If so, 
+     * then grey out the button.
+     */
     @AuraEnabled(cacheable=true)
     public static boolean shouldButtonBeDisabled(Id oppId) {
         System.debug('Checking if button should be disabled...');
@@ -191,6 +197,11 @@ public class ScriptDisplayController {
         }
     }
 
+    /**
+     * Will try to retrieve a metric object, if there is one associated with this user (i.e. the user is looking at a script 
+     * for him or her specifically) then it will return that one. Otherwise return one not associated with a user, there 
+     * should only be one per opportunity. There can also be one metric per user per opportunity.
+     */
     private static Script_Metric__c getMetricRecord(Id oppId) {
         List<Script_Metric__c> metrics = [SELECT Related_User__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :oppId];
         Script_Metric__c metric;

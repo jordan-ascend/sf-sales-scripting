@@ -1,5 +1,9 @@
 @isTest
 public class SalesRepScriptTrig_Test {
+
+    /**
+     * Test that the trigger prevents a script with identical filters to another from being inserted.
+     */
     @isTest
     static void testDuplicateScript() {
         Opportunity opp = AscendTestDataFactory.createOpportunity(null);

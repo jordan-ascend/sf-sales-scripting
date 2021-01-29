@@ -2,13 +2,20 @@
     <template if:true={scriptObject.data}>
         <lightning-card title={scriptObject.data.Name}>
             <template if:true={scriptObject.data}>
-                <lightning-formatted-rich-text
-                value={scriptObject.data.jgaude__Script__c}
-                ></lightning-formatted-rich-text>
+                <div>
+                    <lightning-formatted-rich-text
+                    value={scriptObject.data.jgaude__Script__c}
+                    ></lightning-formatted-rich-text>
+                </div>
+                <div>
+                    <p>{buttonEnabledBool}</p>
+                    <lightning-button name="readButton" variant="brand" label="Mark As Read" title="Mark As Read" onclick={markRead} class="slds-m-left_x-small"></lightning-button>
+                </div>
             </template>
             <template if:true={error}>
-                <P>{error}</P>
+                <P>{error.data}</P>
             </template>
         </lightning-card>
+        
     </template>
 </template>

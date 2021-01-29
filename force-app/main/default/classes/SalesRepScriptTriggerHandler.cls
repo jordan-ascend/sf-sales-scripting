@@ -1,6 +1,7 @@
 public class SalesRepScriptTriggerHandler {
     public static void beforeInsert(List<SObject> newObjs) {
-        validateUniqueScript(newObjs, null);
+        System.debug('Checkpoint 1');
+        validateUniqueScript(newObjs, new List<Id>());
     }
 
     public static void beforeUpdate(Map<Id,SObject> oldObjs,List<SObject> newObjs) {
@@ -20,19 +21,14 @@ public class SalesRepScriptTriggerHandler {
     }
 
     private static void validateUniqueScript(List<SObject> newTriggerObjs, List<Id> scriptIds) {
-        List<Id> ids = new List<Id>();
-        if(scriptIds == null || scriptIds.isEmpty())
-            ids.add('');
-        else
-            ids.addAll(scriptIds);
-        
+        System.debug('Checkpoint 2');
         List<String> scriptKeys = new List<String>();
         for(SObject o: newTriggerObjs) {
             scriptKeys.add((String)o.get('UniqueKey__c'));
         }
 
         for(SObject o: newTriggerObjs) {
-            for(Sales_Rep_Script__c existingScript: getScripts(scriptKeys, ids)) {
+            for(Sales_Rep_Script__c existingScript: getScripts(scriptKeys, scriptIds)) {
                 if((String)o.get('UniqueKey__c') == existingScript.UniqueKey__c && (Boolean)o.get('Active__c')) {
                     o.addError('The script called "' + existingScript.Name + '" is already using the combination of filters that you are trying to select. ' +
                     'You must select a unique combination of filters, or mark this script or "' + existingScript.Name + '" as inactive.');

@@ -142,6 +142,78 @@ public class AscendTestDataFactory {
     }
 
     /**
+     * Create Opportunity
+     * Parameters:
+     * fields - Map of SObjectField to Object to set fields
+     * Returns:
+     * An Opportunity Object
+     * 
+     * Field Defaults:
+     * LastName = 'TestOpportunity[randomStringOfNumners]'
+     * CloseDate = Seven days from Opportunity instantiation
+     * StageName = 'Prospecting'
+     */
+    public static Opportunity createOpportunity(Map<SObjectField,Object> fields) {
+        return createOpportunities(1, fields)[0];
+    }
+
+    /**
+     * Create Opportunities
+     * Parameters:
+     * howMany - integer of opportunities to create
+     * fields - Map of SObjectField to Object to set fields
+     * Returns:
+     * A list of Opportunity Objects
+     * 
+     * 
+     * Field Defaults:
+     * LastName = 'TestOpportunity[randomStringOfNumners]'
+     * CloseDate = Seven days from Opportunity instantiation
+     * StageName = 'Prospecting'
+     */
+    public static List<Opportunity> createOpportunities(Integer howMany, Map<SObjectField,Object> fields) {
+        List<Opportunity> objs = new List<Opportunity>();
+        for(Integer i = 0; i < howMany; i++) {
+            objs.add(new Opportunity(
+                Name = 'TestOpportunity' + AscendUtils.randomNumberString(5),
+                CloseDate = Date.Today().addDays(7),
+                StageName = 'Prospecting'
+            ));
+        }
+        assignFields(objs, fields);
+        recordsToCommit.addAll(objs);
+        commitData();
+        return objs;
+    }
+
+    public static Sales_Rep_Script__c createScript(Map<SObjectField,Object> fields) {
+        Sales_Rep_Script__c obj = new Sales_Rep_Script__c(
+            Active__c = true,
+            OpportunityStage__c = 'Prospecting',
+            OpportunityType__c = '-- Any --',
+            Script__c = 'This is a test script',
+            UserRole__c = '-- Any --'
+        );
+        assignFields(new List<SObject>{obj}, fields);
+        recordsToCommit.add(obj);
+        commitData();
+        return obj;
+    }
+
+    public static Script_Metric__c createScriptMetric(Sales_Rep_Script__c script, Opportunity opp, Map<SObjectField,Object> fields) {
+        Script_Metric__c obj = new Script_Metric__c(
+            Opportunity__c = opp.Id,
+            Opportunity_Stage__c = opp.StageName,
+            Opportunity_Won__c = opp.StageName == 'Closed Won'?true:false,
+            Scripts_Used__c = opp.StageName + ':' + script.Id
+        );
+        assignFields(new List<SObject>{obj}, fields);
+        recordsToCommit.add(obj);
+        commitData();
+        return obj;
+    }
+
+    /**
      * Accepts a list of SObjects and a map of SObjectField to Object. 
      * This will set field values for the list of SObjects.
      * Example: Set website for list of Accounts. The map: {Account.Website => 'example.com'}

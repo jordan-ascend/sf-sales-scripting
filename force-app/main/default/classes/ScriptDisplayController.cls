@@ -2,27 +2,42 @@
  * TODO: Write tests.
  */
 public class ScriptDisplayController {
-    public ScriptDisplayController() {}
 
     @AuraEnabled(cacheable=true)
-    public static jgaude__Sales_Rep_Script__c getScript(Id OppId) {
-        System.debug(UserInfo.getUserId());
-        System.debug(UserInfo.getUserName());
-
+    public static jgaude__Sales_Rep_Script__c getScript(Id oppId) {
         Id userId = UserInfo.getUserId();
         String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
         userRoleName = userRoleName == null? '-- Any --' : userRoleName;
-        Opportunity opp = getOpportunity(OppId);
+        Opportunity opp = getOpportunity(oppId);
 
-        System.debug(opp);
-        System.debug(opp.Type);
-        System.debug(opp.StageName);
-        
-        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
+        String oppType = opp.Type == null? '-- Any --' : opp.Type;
+
+        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, oppType, opp.StageName);
         Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
 
         System.debug(scriptToDeliver);
         return scriptToDeliver;
+    }
+
+
+    @AuraEnabled(cacheable=true)
+    public static boolean shouldButtonBeDisabled(Id oppId) {
+        System.debug('Checking if button should be disabled...');
+        Id userId = UserInfo.getUserId();
+        String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
+        userRoleName = userRoleName == null? '-- Any --' : userRoleName;
+
+        Script_Metric__c metric = getMetricRecord(oppId);
+        if(metric == null || metric.Scripts_Used__c == null)
+            return false;
+        Opportunity opp = getOpportunity(oppId);
+        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
+        if(scripts.isEmpty())
+            return true;
+        Sales_Rep_Script__c script = getMostSpecific(scripts);
+        System.debug(metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id));
+        System.debug(opp.StageName + ':' + script.Id);
+        return metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id);
     }
 
     /**
@@ -96,32 +111,6 @@ public class ScriptDisplayController {
         return mostSpecificScript;
     }
 
-    private static List<Sales_Rep_Script__c> getHighestPriorirtyScript(List<Sales_Rep_Script__c> scripts) {
-        scripts = getScriptsWithUser(scripts);
-        scripts = getScriptsForOpp(scripts);
-        return scripts;
-    }
-
-    /**
-     * Get a list of scripts that the opportunity is related to. 
-     * If none are related to the opportunity then return the original list.
-     * If any are for other opporunities then we want to remove those before returning.
-     */
-    private static List<Sales_Rep_Script__c> getScriptsForOpp(List<Sales_Rep_Script__c> scripts) {
-        List<Sales_Rep_Script__c> matchingScripts = new List<Sales_Rep_Script__c>();
-
-        for(Sales_Rep_Script__c script: scripts) {
-            if(script.Opportunity__c != null) 
-                matchingScripts.add(script);
-        }
-
-        if(matchingScripts.isEmpty()) {
-            return scripts;
-        }
-            
-        return matchingScripts;
-    }
-
     private static List<Sales_Rep_Script__c> getScriptObjects(Id oppId, Id userId, String userRoleName, String oppType, String stage) {
         return [SELECT Name, Script__c, scriptUser__c, UserRole__c, Opportunity__c, OpportunityType__c
                 FROM Sales_Rep_Script__c 
@@ -138,11 +127,25 @@ public class ScriptDisplayController {
     /**
      * Handle creation or update of a Script_Metric__c record that will keep track of the scripts used for an opportunity
      */
-    @testVisible
-    private static void handleMetricObject(Opportunity opp, Sales_Rep_Script__c script) {
-        List<Script_Metric__c> metrics = [SELECT Id FROM Script_Metric__c WHERE Opportunity__c = :opp.Id];
-        Script_Metric__c metric;
-
+    @AuraEnabled
+    public static void handleMetricObject(Id oppId) {
+        
+        Id userId = UserInfo.getUserId();
+        String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
+        userRoleName = userRoleName == null? '-- Any --' : userRoleName;
+        
+        Opportunity opp = getOpportunity(oppId);
+        
+        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
+        if(scripts.isEmpty())
+            return;
+        
+        Sales_Rep_Script__c script = getMostSpecific(scripts);
+        
+        List<Script_Metric__c> metrics = [SELECT Related_User__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :oppId];
+        Script_Metric__c metric = getMetricRecord(oppId);
+        
+        // We should only find one of these per user per opportunity or one without a user per opportunity.
         for(Script_Metric__c m: metrics) {
             if(m.Related_User__c == UserInfo.getUserId()) {
                 metric = m;
@@ -186,5 +189,22 @@ public class ScriptDisplayController {
             
             update metric;
         }
+    }
+
+    private static Script_Metric__c getMetricRecord(Id oppId) {
+        List<Script_Metric__c> metrics = [SELECT Related_User__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :oppId];
+        Script_Metric__c metric;
+        
+        // We should only find one of these per user per opportunity or one without a user per opportunity.
+        for(Script_Metric__c m: metrics) {
+            if(m.Related_User__c == UserInfo.getUserId()) {
+                metric = m;
+                break;
+            } else if(m.Related_User__c == null) {
+                metric = m;
+            }
+        }
+
+        return metric;
     }
 }

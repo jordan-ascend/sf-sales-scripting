@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Scripts_Used__c</fullName>
+    <description>Stores a comma-sepparated list of stage names to script ids i.e. prospectin:scriptId1,Qualification:ScriptId2</description>
+    <externalId>false</externalId>
+    <label>Scripts Used</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>TextArea</type>
+</CustomField>

@@ -123,6 +123,26 @@ public class AscendUtils {
     }
 
     /**
+     * Get a subset of a list.
+     * Solution from https://salesforce.stackexchange.com/a/179789
+     * 
+     * Parameters:
+     * List<Object> inputList - The list to get the subset from
+     * Integer ge - The first index of the subset.
+     * Integer l - The last index of the subset + 1
+     * 
+     * Returns:
+     * A List of Objects that is the specified subset.
+     */
+    public static List<Object> slice(List<Object> inputList, Integer ge, Integer l) {
+        List<Object> output = inputList.clone();
+        for (Integer i = 0; i < ge; i++) output.remove(0);
+        Integer elements = l - ge;
+        while (output.size() > elements) output.remove(elements);
+        return output;
+    }
+
+    /**
      * Appends a string to a delimiter separated set string. As the name implies, the items in the string are unique.
      * 
      * Parameters:

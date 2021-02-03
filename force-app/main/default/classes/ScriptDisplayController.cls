@@ -148,18 +148,7 @@ public class ScriptDisplayController {
         
         Sales_Rep_Script__c script = getMostSpecific(scripts);
         
-        List<Script_Metric__c> metrics = [SELECT Related_User__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :oppId];
         Script_Metric__c metric = getMetricRecord(oppId);
-        
-        // We should only find one of these per user per opportunity or one without a user per opportunity.
-        for(Script_Metric__c m: metrics) {
-            if(m.Related_User__c == UserInfo.getUserId()) {
-                metric = m;
-                break;
-            } else if(m.Related_User__c == null) {
-                metric = m;
-            }
-        }
 
         if(metric == null) {
             metric = new Script_Metric__c();
@@ -195,6 +184,51 @@ public class ScriptDisplayController {
             
             update metric;
         }
+
+        Opporunity_Script_Junction__c junct = getJunctionRecord(oppId, script.Id);
+        
+        if(junct == null) {
+            junct = new Opporunity_Script_Junction__c();
+            junct.Opporunity_Stage__c = opp.StageName;
+            junct.Opportunity__c = oppId;
+            junct.Sales_Rep_Script__c = script.Id;
+            insert junct;
+        }
+        else if(junct != null && junct.Related_User_Id__c == null && script.scriptUser__c == UserInfo.getUserId()) {
+            junct = new Opporunity_Script_Junction__c();
+            junct.Opporunity_Stage__c = opp.StageName;
+            junct.Opportunity__c = oppId;
+            junct.Sales_Rep_Script__c = script.Id;
+            insert junct;
+        }
+        else {
+            junct.Opporunity_Stage__c = opp.StageName;
+            update junct;
+        }
+
+    }
+
+    /**
+     * Will try to retrieve a metric object, if there is one associated with this user (i.e. the user is looking at a script 
+     * for him or her specifically) then it will return that one. Otherwise return one not associated with a user, there 
+     * should only be one per opportunity. There can also be one metric per user per opportunity.
+     */
+    private static Opporunity_Script_Junction__c getJunctionRecord(Id oppId, Id scriptId) {
+        List<Opporunity_Script_Junction__c> oppScriptJuncts = [SELECT Opporunity_Stage__c, Related_User_Id__c, Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c 
+        WHERE Opportunity__c = :oppId AND Sales_Rep_Script__c = :scriptId];
+        Opporunity_Script_Junction__c junct;
+
+        // We should only find one of these per user per opportunity or one without a user per opportunity.
+        for(Opporunity_Script_Junction__c j: oppScriptJuncts) {
+            if(j.Related_User_Id__c  == UserInfo.getUserId()) {
+                junct = j;
+                break;
+            } else if(j.Related_User__c == null) {
+                junct = j;
+            }
+        }
+
+        return junct;
     }
 
     /**

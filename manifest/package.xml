@@ -37,5 +37,10 @@
         <members>*</members>
         <name>CustomObject</name>
     </types>
+    <types>
+        <members>Opporunity_Script_Junction__c</members>
+        <members>*</members>
+        <name>CustomObject</name>
+    </types>
     <version>50.0</version>
 </Package>

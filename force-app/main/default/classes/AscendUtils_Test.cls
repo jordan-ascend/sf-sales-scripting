@@ -81,4 +81,11 @@ public class AscendUtils_Test {
         str = AscendUtils.addToDelimitedSet(str, 'two', ';');
         system.assertEquals('one;two;three;four', str);
     }
+
+    @isTest
+    static void testListSlice() {
+        List<String> strList = new List<String>{'First', 'second', 'third', 'fourth', 'fifth', 'sixth'};
+        List<String> newStrList = (List<String>)AscendUtils.slice(strList, 1, 3);
+        System.assertEquals('second,third', String.join(newStrList, ','));
+    }
 }

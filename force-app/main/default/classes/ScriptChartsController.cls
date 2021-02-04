@@ -1,9 +1,9 @@
 /**
  * Copied from example for ChartJs. Will modify for our use.
  */
-public with sharing class ScriptChartsController {
+public class ScriptChartsController {
     @AuraEnabled(cacheable=true)
-    public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(){
+    public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(Boolean capScripts){
         // List<AggregateResult> juncts = [SELECT COUNT(Id)cnt, jgaude__Sales_Rep_Script__r.Name, jgaude__Sales_Rep_Script__r.Id FROM jgaude__Opporunity_Script_Junction__c 
         //                                                 GROUP BY jgaude__Sales_Rep_Script__r.Name, jgaude__Sales_Rep_Script__r.Id ORDER BY COUNT(id) DESC];
 
@@ -31,6 +31,7 @@ public with sharing class ScriptChartsController {
                 ScriptChartsController.ScriptCount cntObj = new ScriptChartsController.ScriptCount();
                 cntObj.count = 1;
                 cntObj.name = j.Sales_Rep_Script__r.Name;
+                cntObj.url = URL.getSalesforceBaseUrl().toExternalForm() + '/' + j.Sales_Rep_Script__c;
                 junctionMap.put(j.Sales_Rep_Script__r.Name, cntObj);
             }
             else {
@@ -48,14 +49,18 @@ public with sharing class ScriptChartsController {
         scriptCntObj.sort();
         System.debug(scriptCntObj);
         // Capping the number of bars on the bar graph to 10.
-        List<ScriptChartsController.ScriptCount> subset = (List<ScriptChartsController.ScriptCount>)AscendUtils.slice(scriptCntObj, 0, 10);
-        System.debug(subset);
-        return subset;
+        if(capScripts) {
+            List<ScriptChartsController.ScriptCount> subset = (List<ScriptChartsController.ScriptCount>)AscendUtils.slice(scriptCntObj, 0, 10);
+            System.debug(subset);
+            return subset;
+        } 
+        return scriptCntObj;
     }
 
     public class ScriptCount implements Comparable{
         @AuraEnabled public String name;
         @AuraEnabled public Integer count;
+        @AuraEnabled public String url;
 
         public Integer compareTo(Object compareTo) {
             ScriptChartsController.ScriptCount scriptCntToComapre = (ScriptChartsController.ScriptCount)compareTo;

@@ -214,7 +214,7 @@ public class ScriptDisplayController {
      * should only be one per opportunity. There can also be one metric per user per opportunity.
      */
     private static Opporunity_Script_Junction__c getJunctionRecord(Id oppId, Id scriptId) {
-        List<Opporunity_Script_Junction__c> oppScriptJuncts = [SELECT Opporunity_Stage__c, Related_User_Id__c, Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c 
+        List<Opporunity_Script_Junction__c> oppScriptJuncts = [SELECT Opporunity_Stage__c, Related_User__c, Related_User_Id__c, Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c 
         WHERE Opportunity__c = :oppId AND Sales_Rep_Script__c = :scriptId];
         Opporunity_Script_Junction__c junct;
 

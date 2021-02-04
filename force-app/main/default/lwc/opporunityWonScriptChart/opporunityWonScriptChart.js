@@ -7,7 +7,7 @@ import getOpportunities from '@salesforce/apex/ScriptChartsController.getScripts
 export default class opporunityWonScriptChart extends LightningElement {
     @track chartConfiguration;
 
-    @wire(getOpportunities, {})
+    @wire(getOpportunities, {capScripts:true})
     getOpportunities({data, error}) {
         if (error) {
         this.error = error;

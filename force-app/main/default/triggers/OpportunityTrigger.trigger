@@ -6,6 +6,6 @@ trigger OpportunityTrigger on Opportunity (after insert, after update) {
         OpportunityTriggerHandler.afterInsert(Trigger.newMap);
     }
     if(Trigger.isUpdate) {
-        OpportunityTriggerHandler.afterUpdate(Trigger.oldMap, Trigger.oldMap);
+        OpportunityTriggerHandler.afterUpdate(Trigger.oldMap, Trigger.newMap);
     }
 }

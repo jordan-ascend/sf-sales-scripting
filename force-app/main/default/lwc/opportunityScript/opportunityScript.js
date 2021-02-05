@@ -2,6 +2,8 @@ import { LightningElement, track, wire, api } from 'lwc';
 import getScript from '@salesforce/apex/ScriptDisplayController.getScript';
 import recordScriptUse from '@salesforce/apex/ScriptDisplayController.handleMetricObject';
 import buttonEnabled from '@salesforce/apex/ScriptDisplayController.shouldButtonBeDisabled';
+import getNewScript from '@salesforce/apex/ScriptDisplayController.getNewScript';
+import { refreshApex } from '@salesforce/apex';
 
 export default class OpportunityScript extends LightningElement {
 
@@ -37,23 +39,9 @@ export default class OpportunityScript extends LightningElement {
         });
     }
 
-    refreshCmp(event) {
+    getNewScript(event) {
         console.log('::Refresh::');
-        getScript({oppId:this.searchKey})
-        .then(result => {
-            this.scriptObject = result;
-        })
-        .catch(error =>{
-            this.error = error;
-        });;
-        buttonEnabled({oppId:this.searchKey})
-        .then(result => {
-            this.buttonDisabledBool = result;
-            let readButton = this.template.querySelector('lightning-button');
-            readButton.disabled = this.buttonDisabledBool;
-        })
-        .catch(error =>{
-            this.error = error;
-        });
+        refreshApex(this.scriptObject);
+        this.connectedCallback()
     }
 }

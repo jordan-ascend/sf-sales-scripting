@@ -26,7 +26,7 @@ public class ScriptDisplayController {
      * Looks at the metric object to see if this script has already been read (the 'read' button has been clicked). If so, 
      * then grey out the button.
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled//(cacheable=true)
     public static boolean shouldButtonBeDisabled(Id oppId) {
         System.debug('Checking if button should be disabled...');
         Id userId = UserInfo.getUserId();
@@ -44,6 +44,12 @@ public class ScriptDisplayController {
         System.debug(metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id));
         System.debug(opp.StageName + ':' + script.Id);
         return metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id);
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static jgaude__Sales_Rep_Script__c getNewScript(Id oppId) {
+        System.debug(oppId);
+        return getScript(oppId);
     }
 
     /**

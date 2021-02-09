@@ -57,7 +57,7 @@ public class ScriptChartsController {
         }
 
         List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();
-        scripts = [SELECT Name, Script__c FROM Sales_Rep_Script__c WHERE Id = :scriptIds];
+        scripts = [SELECT Name, Script__c, OpportunityStage__c FROM Sales_Rep_Script__c WHERE Id = :scriptIds];
 
         System.debug(scriptsMap.keySet());
         Integer increment = 1;
@@ -82,6 +82,7 @@ public class ScriptChartsController {
                         nameAndUrl.name = scr.Name;
                         nameAndUrl.url =  '/' + scr.Id;
                         nameAndUrl.script = scr.Script__c;
+                        nameAndUrl.stage = scr.OpportunityStage__c;
                         count.namesAndUrls.add(nameAndUrl);
                         // count.names.add(scr.Name);
                         // count.urls.add(URL.getSalesforceBaseUrl().toExternalForm() + '/' + scr.Id);
@@ -130,6 +131,7 @@ public class ScriptChartsController {
     public class NameAndURL {
         @AuraEnabled public String name;
         @AuraEnabled public String url;
+        @AuraEnabled public String stage;
         @AuraEnabled public String script;
     }
 }

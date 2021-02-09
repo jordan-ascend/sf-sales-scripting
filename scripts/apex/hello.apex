@@ -38,4 +38,4 @@
 // };
 // insert junctions;
 
-ScriptInfoController.getScriptsWinsOverTime();
+ScriptChartsController.getAggregatedScripts(true);

@@ -1,0 +1,25 @@
+<!-- Copied from example for ChartJs. Will modify for our use. -->
+<template>
+    <lightning-card title="Number of Opportunities Won With a Set of Scripts" icon-name="utility:chart">
+        <template if:true={chartConfiguration}>
+            <c-chart chart-config={chartConfiguration}></c-chart>
+        </template>
+    <!-- </lightning-card>
+
+    <lightning-card> -->
+        <lightning-accordion>
+            <template for:each={countObjs} for:item="obj">
+                <lightning-accordion-section key={obj.groupName} name={obj.groupName} label={obj.groupName}>
+                    <template for:each={obj.namesAndUrls} for:item="nameAndUrl">
+                        <div key={nameAndUrl} class="slds-p-around_medium" style="background-color: rgb(242, 242, 242);">
+                            <lightning-tile label={nameAndUrl.name} href={nameAndUrl.url}>
+                                <lightning-formatted-rich-text value={nameAndUrl.script}></lightning-formatted-rich-text>
+                            </lightning-tile>
+                        </div>
+                        
+                    </template>
+                </lightning-accordion-section>
+            </template>
+        </lightning-accordion>
+    </lightning-card>
+</template>

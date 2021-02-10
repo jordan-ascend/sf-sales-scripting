@@ -61,3 +61,6 @@ force-app/main/default/pages/HelloSalesforce.page-meta.xml
 
 #LWC
 force-app/main/default/lwc/accountLayoutComponent
+
+#Anonymous Apex/commands
+scripts/apex/scratch.apex

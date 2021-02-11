@@ -143,6 +143,29 @@ public class AscendUtils {
     }
 
     /**
+     * Gets strings that match a regular expression.
+     * 
+     * Parameters:
+     * String inputString - A string to extract expressions from.
+     * String regex - The regular expression to match.
+     * 
+     * Returns:
+     * A list of Strings containing the matched expressions.
+     */
+    public static List<String> getMatchedExpressions(String inputString, String regex) {
+        Pattern tokenMatch = Pattern.compile(regex);
+        Matcher m = tokenMatch.matcher(inputString);
+        List<String> exprList = new List<String>();
+        if(!m.find())
+            return exprList;
+        while (!m.hitEnd()) {
+            exprList.add(m.group());
+            m.find();
+        }
+        return exprList;
+    }
+
+    /**
      * Appends a string to a delimiter separated set string. As the name implies, the items in the string are unique.
      * 
      * Parameters:

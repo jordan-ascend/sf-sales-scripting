@@ -88,4 +88,17 @@ public class AscendUtils_Test {
         List<String> newStrList = (List<String>)AscendUtils.slice(strList, 1, 3);
         System.assertEquals('second,third', String.join(newStrList, ','));
     }
+
+    @isTest
+    static void testGetMatchedExpressions() {
+        String str = 'The name of the opportunity is {Opportunity.Name}, and the close date is {Opportunity.closedate}.';
+        List<String> exprList = AscendUtils.getMatchedExpressions(str, '\\{\\w+\\.\\w+\\}');
+
+        System.assertEquals('{Opportunity.Name}', exprList[0]);
+        System.assertEquals('{Opportunity.closedate}', exprList[1]);
+
+        str = 'There are no matching expressions in this list.';
+        List<String> emptyExprList = AscendUtils.getMatchedExpressions(str, '\\{\\w+\\.\\w+\\}');
+        System.assert(emptyExprList.isEmpty());
+    }
 }

@@ -18,6 +18,7 @@ public class ScriptDisplayController {
         List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, oppType, opp.StageName);
         Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
 
+        scriptToDeliver.Script__c = ScriptTemplateHandler.interpolateScript(scriptToDeliver.Script__c, oppId);
         System.debug(scriptToDeliver);
         return scriptToDeliver;
     }

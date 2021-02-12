@@ -3,55 +3,99 @@
  */
 public class ScriptTemplateHandler {
 
-    // Matches patterns such as {firstWord.SecondWord} or {opportunity.name}
-    private static Pattern tokenMatch = Pattern.compile('\\{\\w+\\.\\w+\\}');
     private static final List<String> ALLOWED_TOKENS = new List<String>{
-        'Ammount',
-        'CloseDate',
-        'Description',
-        'LeadSource',
-        'Name',
-        'Type'
+        'Opportunity.Ammount',
+        'Opportunity.CloseDate',
+        'Opportunity.Description',
+        'Opportunity.LeadSource',
+        'Opportunity.Name',
+        'Opportunity.Type',
+        'Opportunity.Account.Name',
+        'Opportunity.Account.AccountNumber',
+        'Opportunity.Account.YearStarted'
     };
 
-    public static String tokenizeString(String str, SObject obj) {
-        // if(String.isBlank(str) || !(str.contains('{') && str.contains('}')))
-        //     return str;
+    public static String interpolateScript(String script, Id oppId) {
+        // Matches patterns such as {firstWord.SecondWord} or {opportunity.name}
+        List<String> exprList = AscendUtils.getMatchedExpressions(script, '\\{\\w+[\\.\\w+]+\\w+\\}');
+        if(exprList.isEmpty())
+            return script;
+        Map<String,String> regexExprMap = new  Map<String,String>();
+        Map<String,String> fieldData = new Map<String,String>();
 
-        List<String> strList = str.split(' ');
-        List<String> returnStrList = new List<String>();
-
-        for(String s: strList) {
-            String temp = s.trim();
-            System.debug('Going through words: ' + temp);
-            if(tokenMatch.matcher(temp).find() && stringListContainsIgnoreCase(ALLOWED_TOKENS, temp)) {
-
-                // List<String> tempStrLst = temp.split('[\\{\\}]');
-                // tempStrLst = AscendUtils.slice(tempStrLst, ge, l)
-                // Kind of a crude form of interpolation. Works at a basic level. Working on refining int.
-
-                System.debug('Token: ' + temp);
-                System.debug('Requested field: ' + temp.substring(temp.indexOf('.')+1, temp.indexOf('}')));
-                String newWord = String.valueOf(obj.get(temp.substring(temp.indexOf('.')+1, temp.indexOf('}'))));
-                if(s.substring(0, 1).equals(' '))
-                    newWord = ' ' + newWord;
-                returnStrList.add(newWord);
+        for(String expr: exprList) {
+            List<String> exprComponents = expr.split('[\\{\\.\\}]');
+            exprComponents = removeBlanks(exprComponents);
+            if(stringListContainsIgnoreCase(ALLOWED_TOKENS, expr)) {
+                if(exprComponents.size() > 3) throw new ScriptInterpolationException('API field name cannot go more than one level deep.');
+                if(exprComponents[0] != 'Opportunity') throw new ScriptInterpolationException('Tag must start with "Opportunity. i.e. {Opportunity.Name}');
+                fieldData.put(exprComponents[1]+(exprComponents.size()==3?'.'+exprComponents[2]:''), null);
+                regexExprMap.put(exprComponents[1]+(exprComponents.size()==3?'.'+exprComponents[2]:''), '\\{' + exprComponents[0] + '\\.' + exprComponents[1] + (exprComponents.size()==3?'\\.' + exprComponents[2]:'') + '\\}');
             }
             else {
-                returnStrList.add(s);
+                throw new ScriptInterpolationException('Invalid API name.');
             }
         }
-        return String.join(returnStrList, ' ');
+
+        System.debug(fieldData);
+        System.debug(regexExprMap);
+
+        List<String> tmpList = new List<String>();
+        tmpList.addAll(fieldData.keySet());
+        String qryStr = 'SELECT ' + String.join(tmpList, ',') + ' FROM Opportunity WHERE Id = \'' + oppId + '\'';
+        System.debug(qryStr);
+        SObject opp = Database.query(qryStr)[0];
+
+        for(String key: fieldData.keySet()) {
+            List<String> keyCmp = key.split('\\.');
+            System.debug(key);
+            System.debug(keyCmp);
+            if(keyCmp.size() < 2)
+                fieldData.put(key, String.valueOf(opp.get(key)));
+            else
+                fieldData.put(key, String.valueOf(opp.getSObject(keyCmp[0]).get(keyCmp[1])));
+            if(fieldData.get(key) == null)
+                fieldData.put(key, '[No data for ' + key + ']');
+        }
+
+        System.debug(regexExprMap);
+        System.debug(fieldData);
+
+        // Pattern tokenMatch = Pattern.compile(TOKEN_PATETRN);
+        // Matcher m = tokenMatch.matcher(script);
+        tmpList.clear();
+        tmpList.addAll(regexExprMap.keySet());
+        
+        Pattern tokenMatch = Pattern.compile(regexExprMap.get(tmpList[0]));
+        Matcher m = tokenMatch.matcher(script);
+        String newScript = m.replaceAll(fieldData.get(tmpList[0]));
+        
+        regexExprMap.remove(tmpList[0]);
+
+        for(String key: regexExprMap.keySet()) {
+            m.reset(newScript);
+            m.usePattern(Pattern.compile(regexExprMap.get(key)));
+            newScript = m.replaceAll(fieldData.get(key));
+        }
+
+        return newScript;
     }
 
     private static boolean stringListContainsIgnoreCase(List<String> strList, String str) {
         for(String s: strList) {
-            System.debug('Matching string to list: ' + str + ' to ' + s);
             if(str.containsIgnoreCase(s))
                 return true;
         }
-        System.debug('Matching returning false');
         return false;
+    }
+
+    private static List<String> removeBlanks(List<String> strList) {
+        List<String> newList = new List<String>();
+        for(String str: strList) {
+            if(String.isNotBlank(str))
+                newList.add(str);
+        }
+        return newList;
     }
 
 }

@@ -4,17 +4,18 @@
  */
 public class ScriptTemplateHandler {
 
-    private static final List<String> ALLOWED_TOKENS = new List<String>{
-        'Opportunity.Ammount',
-        'Opportunity.CloseDate',
-        'Opportunity.Description',
-        'Opportunity.LeadSource',
-        'Opportunity.Name',
-        'Opportunity.Type',
-        'Opportunity.Account.Name',
-        'Opportunity.Account.AccountNumber',
-        'Opportunity.Account.YearStarted'
-    };
+    private static final List<String> ALLOWED_TOKENS = getAllowedTokens();
+    // private static final List<String> ALLOWED_TOKENS = new List<String>{
+    //     'Opportunity.Amount',
+    //     'Opportunity.CloseDate',
+    //     'Opportunity.Description',
+    //     'Opportunity.LeadSource',
+    //     'Opportunity.Name',
+    //     'Opportunity.Type',
+    //     'Opportunity.Account.Name',
+    //     'Opportunity.Account.AccountNumber',
+    //     'Opportunity.Account.YearStarted'
+    // };
 
     /**
      * Scans scripts and looks for tags, {Opportunity.someField__c} and dynamically replace them with info 
@@ -105,6 +106,14 @@ public class ScriptTemplateHandler {
                 newList.add(str);
         }
         return newList;
+    }
+
+    private static List<String> getAllowedTokens() {
+        List<String> tags = new List<String>();
+        for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
+            tags.add(templateTagObj.Field_Name__c);
+        }
+        return tags;
     }
 
 }

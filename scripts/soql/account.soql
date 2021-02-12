@@ -1,1 +1,2 @@
 SELECT COUNT(Id)cnt, Sales_Rep_Script__r.Name, Sales_Rep_Script__r.Id FROM Opporunity_Script_Junction__c GROUP BY Sales_Rep_Script__r.Name,Sales_Rep_Script__r.Id ORDER BY COUNT(id) DESC
+select jgaude__Field_Name__c from jgaude__Script_Template_Tag__mdt

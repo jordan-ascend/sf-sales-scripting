@@ -1,5 +1,6 @@
 /**
- * Process scripts with tokens in them. The tokens will be replaced with the proper information requested.
+ * Process scripts with tags in them. The tokens will be replaced with the proper information requested.
+ * All comments refering to tags are refering to the {Opportunity.someField__c} being written into scripts.
  */
 public class ScriptTemplateHandler {
 
@@ -15,6 +16,10 @@ public class ScriptTemplateHandler {
         'Opportunity.Account.YearStarted'
     };
 
+    /**
+     * Scans scripts and looks for tags, {Opportunity.someField__c} and dynamically replace them with info 
+     * related to the current opp being looked at.
+     */
     public static String interpolateScript(String script, Id oppId) {
         // Matches patterns such as {firstWord.SecondWord} or {opportunity.name}
         List<String> exprList = AscendUtils.getMatchedExpressions(script, '\\{\\w+[\\.\\w+]+\\w+\\}');
@@ -23,6 +28,8 @@ public class ScriptTemplateHandler {
         Map<String,String> regexExprMap = new  Map<String,String>();
         Map<String,String> fieldData = new Map<String,String>();
 
+        // Sorting the results of exprList into maps to query the opportunity and keep track of the resulting 
+        // query and what fields get used where in the script.
         for(String expr: exprList) {
             List<String> exprComponents = expr.split('[\\{\\.\\}]');
             exprComponents = removeBlanks(exprComponents);
@@ -40,12 +47,14 @@ public class ScriptTemplateHandler {
         System.debug(fieldData);
         System.debug(regexExprMap);
 
+        // Build and execute query.
         List<String> tmpList = new List<String>();
         tmpList.addAll(fieldData.keySet());
         String qryStr = 'SELECT ' + String.join(tmpList, ',') + ' FROM Opportunity WHERE Id = \'' + oppId + '\'';
         System.debug(qryStr);
         SObject opp = Database.query(qryStr)[0];
 
+        // Sorting queried data into fieldData map. The key is the field api name.
         for(String key: fieldData.keySet()) {
             List<String> keyCmp = key.split('\\.');
             System.debug(key);
@@ -61,17 +70,17 @@ public class ScriptTemplateHandler {
         System.debug(regexExprMap);
         System.debug(fieldData);
 
-        // Pattern tokenMatch = Pattern.compile(TOKEN_PATETRN);
-        // Matcher m = tokenMatch.matcher(script);
+        // Find the first tag and replace with appropriate value.
+        // Doing this to initialize a pattern and matcher.
         tmpList.clear();
         tmpList.addAll(regexExprMap.keySet());
-        
         Pattern tokenMatch = Pattern.compile(regexExprMap.get(tmpList[0]));
         Matcher m = tokenMatch.matcher(script);
         String newScript = m.replaceAll(fieldData.get(tmpList[0]));
         
         regexExprMap.remove(tmpList[0]);
 
+        // Find and replace tags for the rest of the script.
         for(String key: regexExprMap.keySet()) {
             m.reset(newScript);
             m.usePattern(Pattern.compile(regexExprMap.get(key)));

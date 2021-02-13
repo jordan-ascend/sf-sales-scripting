@@ -4,6 +4,7 @@ public class ScriptEditorController {
     public String selectedStage {get;set;}
     public String selectedOppType {get;set;}
     public String selectedUserRole {get;set;}
+    public String templateTags {get;set;}
     public Boolean active {get;set;}
     public Sales_Rep_Script__c scriptObject {get;set;}
 
@@ -11,12 +12,14 @@ public class ScriptEditorController {
         Id id = ApexPages.currentPage().getParameters().get('id');
         this.scriptObject = getScriptRecord(Id);
         getFields();
+        getTemplateTags();
     }
 
     public ScriptEditorController(ApexPages.StandardController stdController) {
         Id recordId = ((Sales_Rep_Script__c)stdController.getRecord()).Id;
         this.scriptObject = getScriptRecord(recordId);
         getFields();
+        getTemplateTags();
     }
 
     public PageReference saveScript() {
@@ -62,5 +65,13 @@ public class ScriptEditorController {
         }
 
         return AscendUtils.createSelectOption(rolesString, true);
+    }
+
+    private void getTemplateTags() {
+        List<String> tags = new List<String>();
+        for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
+            tags.add('{' + templateTagObj.Field_Name__c + '}');
+        }
+        templateTags = String.join(tags, '\n');
     }
 }

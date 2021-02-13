@@ -9,8 +9,13 @@
                 <apex:inputField label="Name" id="script-name" value="{!scriptObject.Name}"/>
             </apex:pageBlockSection>
             <!-- Rich text editor for script -->
-            <apex:pageBlockSection >
-                <apex:inputtextarea label="Script" richtext="true" id="script-text" cols="100" rows="15" value="{!scriptObject.Script__c}"/>
+            <apex:pageBlockSection columns="2">
+                <apex:pageBlockSectionItem>
+                    <apex:inputtextarea label="Script" richtext="true" id="script-text" cols="100" rows="15" value="{!scriptObject.Script__c}"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem>
+                    <apex:inputTextarea readonly="true" rows="20" cols="40" value="{!templateTags}" title="Use any of the available tags below to dynamically add opportunity information to the script. Simply enter the tags into the script as they appear in the box."/>
+                </apex:pageBlockSectionItem>
             </apex:pageBlockSection>
             <!-- Stage picklist -->
             <apex:pageBlockSection >

@@ -215,6 +215,12 @@ public class ScriptTemplateHandler {
         for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
             tags.add(templateTagObj.Field_Name__c);
         }
+
+        if(Test.isRunningTest() && tags.contains('Opportunity.Description')) {
+            Integer i = tags.indexOf('Opportunity.Description');
+            tags.remove(i);
+        }
+
         return tags;
     }
 

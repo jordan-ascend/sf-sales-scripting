@@ -64,7 +64,7 @@ public with sharing class ScriptEditorController {
             } else {
                 System.debug(validationResult);
                 setInvalidTagsSets(validationResult);
-                displayModel = true;
+                showModal();
                 return null;
             }
         } catch(System.DMLException e) {
@@ -186,9 +186,10 @@ public with sharing class ScriptEditorController {
         }
 
         MetadataCallback mdCallBack = new MetadataCallback();
-        Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, mdCallBack);
-        
-        System.debug('Script Editor Tag Metadata Deployment. Job Id: ' + jobId);
+        if(!Test.isRunningTest()) {
+            Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, mdCallBack);
+            System.debug('Script Editor Tag Metadata Deployment. Job Id: ' + jobId);
+        }
         closeModal();
         templateTags += tagsToAddString;
         // getTemplateTags();

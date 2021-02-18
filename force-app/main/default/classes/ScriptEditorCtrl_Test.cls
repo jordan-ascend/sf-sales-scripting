@@ -2,16 +2,20 @@
 public class ScriptEditorCtrl_Test {
     @TestSetup
     static void makeData(){
+        Account acc = AscendTestDataFactory.createAccount(new Map<SObjectField,Object>{Account.Name => 'Test Acc'});
         AscendTestDataFactory.autoCommit = false;
         AscendTestDataFactory.createUser(new Map<SObjectField,Object>{User.FirstName => 'John', User.LastName => 'Doe'});
+        AscendTestDataFactory.createOpportunity(new Map<SObjectField,Object>{
+            Opportunity.Name => 'Test Opp', 
+            Opportunity.StageName => 'Prospecting',
+            Opportunity.AccountId => acc.Id
+        });
         AscendTestDataFactory.autoCommit = true;
     }
 
-    @isTest
-    static void createScript() {
+    static ScriptEditorController getScriptCtrl() {
         User u = [SELECT id FROM User WHERE Email LIKE 'testUser%'];
 
-        Test.startTest();
         ScriptEditorController ctrl = new ScriptEditorController();
         ctrl.scriptObject.Name = 'Preamble to the Constitution';
         ctrl.scriptObject.Script__c = getScriptMessage();
@@ -19,6 +23,14 @@ public class ScriptEditorCtrl_Test {
         ctrl.scriptObject.OpportunityType__c = ctrl.getOppTypeList()[0].getValue();
         ctrl.scriptObject.UserRole__c = ctrl.getUserRoleList()[0].getValue();
         ctrl.scriptObject.scriptUser__c = u.Id;
+        ctrl.scriptObject.Active__c = true;
+        return ctrl;
+    }
+
+    @isTest
+    static void createScript() {
+        Test.startTest();
+        ScriptEditorController ctrl = getScriptCtrl();
         ctrl.saveScript();
         Test.stopTest();
 
@@ -30,6 +42,61 @@ public class ScriptEditorCtrl_Test {
         System.debug(scriptObject.UserRole__c);
         System.debug(scriptObject.scriptUser__c);
         System.assertEquals('Preamble to the Constitution', scriptObject.Name);
+    }
+
+    @isTest
+    static void createScriptTemplate() {
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
+        String interpMsg;
+
+        Test.startTest();
+        ScriptEditorController ctrl = getScriptCtrl();
+        ctrl.scriptObject.Script__c = 'Opp name: {Opportunity.Name} Account name: {Opportunity.Account.Name}';
+        ctrl.scriptObject.OpportunityStage__c = 'Prospecting';
+        ctrl.saveScript();
+
+        Sales_Rep_Script__c scriptObject = [SELECT Name, Script__c, OpportunityStage__c, OpportunityType__c, UserRole__c, scriptUser__c FROM Sales_Rep_Script__c WHERE Id = :ctrl.scriptObject.Id];
+        interpMsg = hndlr.interpolateScript(scriptObject.Script__c, opp.Id);
+        Test.stopTest();
+
+        System.assertEquals('Preamble to the Constitution', scriptObject.Name);
+        System.assertEquals('Opp name: Test Opp Account name: Test Acc', interpMsg);
+    }
+
+    @isTest
+    static void createScriptTemplateUnauthorizedTag() {
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
+        String interpMsg;
+
+        Test.startTest();
+        ScriptEditorController ctrl = getScriptCtrl();
+        ctrl.scriptObject.Script__c = '{Opportunity.Description}';
+        ctrl.scriptObject.OpportunityStage__c = 'Prospecting';
+        ctrl.saveScript();
+
+        Integer scriptObjectCount = [SELECT Id FROM Sales_Rep_Script__c].size();
+        Test.stopTest();
+
+        System.assertEquals(0, scriptObjectCount);
+        System.assert(ctrl.tagsToAdd.contains('{Opportunity.Description}'));
+        System.assertEquals(true, ctrl.displayModel);
+        System.assertEquals(true, ctrl.showToAddList);
+
+        ctrl.closeModal();
+
+        System.assert(ctrl.tagsToAdd.isEmpty());
+    }
+
+    @isTest
+    static void testSaveNewTags() {
+        Test.startTest();
+        ScriptEditorController ctrl = getScriptCtrl();
+        ctrl.tagsToAdd.add('{TestTest.TestTest}');
+        ctrl.saveNewTags();
+        Test.stopTest();
+        // Can't assert that custom metadata has been deployed.
     }
 
     static String getScriptMessage() {

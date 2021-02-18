@@ -2,12 +2,14 @@ public class SalesRepScriptTriggerHandler {
     public static void beforeInsert(List<SObject> newObjs) {
         System.debug('Checkpoint 1');
         validateUniqueScript(newObjs, new List<Id>());
+        // validateTemplateTags(newObjs);
     }
 
     public static void beforeUpdate(Map<Id,SObject> oldObjs,List<SObject> newObjs) {
         List<Id> ids = new List<Id>();
         ids.addAll(oldObjs.keySet());
         validateUniqueScript(newObjs, ids);
+        // validateTemplateTags(newObjs);
     }
 
     /**
@@ -19,6 +21,22 @@ public class SalesRepScriptTriggerHandler {
         WHERE UniqueKey__c IN :scriptKeys AND Id NOT IN :scriptIds AND Active__c = true];
         return scripts;
     }
+
+    // private static void validateTemplateTags(List<SObject> newTriggerObjs) {
+    //     Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+
+    //     for(SObject o: newTriggerObjs) {
+    //         try{
+    //             ScriptTemplateHandler.interpolateScript((String)o.get('Script__c'), opp.Id);
+    //         } catch(ScriptInterpolationException e) {
+    //             System.debug(e.getMessage());
+    //             o.addError(e.getMessage() + ' Error thorwn.');
+    //         } catch(Exception e) {
+    //             System.debug(e.getMessage() + '\n' + e.getStackTraceString());
+    //             o.addError(e.getMessage() + '\n' + e.getStackTraceString());
+    //         }
+    //     }
+    // }
 
     private static void validateUniqueScript(List<SObject> newTriggerObjs, List<Id> scriptIds) {
         System.debug('Checkpoint 2');

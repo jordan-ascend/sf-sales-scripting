@@ -24,6 +24,9 @@ public class ScriptTemplateHandler {
     public static String interpolateScript(String script, Id oppId) {
         // Matches patterns such as {firstWord.SecondWord} or {opportunity.name}
         List<String> exprList = AscendUtils.getMatchedExpressions(script, '\\{\\w+[\\.\\w+]+\\w+\\}');
+        
+        Set<String> invalidTokens = new Set<String>();
+        Set<String> tokensToAdd = new Set<String>();
         if(exprList.isEmpty())
             return script;
         Map<String,String> regexExprMap = new  Map<String,String>();
@@ -41,7 +44,7 @@ public class ScriptTemplateHandler {
                 regexExprMap.put(exprComponents[1]+(exprComponents.size()==3?'.'+exprComponents[2]:''), '\\{' + exprComponents[0] + '\\.' + exprComponents[1] + (exprComponents.size()==3?'\\.' + exprComponents[2]:'') + '\\}');
             }
             else {
-                throw new ScriptInterpolationException('Invalid API name.');
+                tokensToAdd.add(expr);
             }
         }
 
@@ -51,9 +54,26 @@ public class ScriptTemplateHandler {
         // Build and execute query.
         List<String> tmpList = new List<String>();
         tmpList.addAll(fieldData.keySet());
+        tmpList.add('Id');
         String qryStr = 'SELECT ' + String.join(tmpList, ',') + ' FROM Opportunity WHERE Id = \'' + oppId + '\'';
         System.debug(qryStr);
         SObject opp = Database.query(qryStr)[0];
+
+        
+
+        invalidTokens = validateValidTags(tokensToAdd);
+        for(String tag: invalidTokens) {
+            if(tokensToAdd.contains(tag))
+                tokensToAdd.remove(tag);
+        }  
+        
+        System.debug(invalidTokens);
+        System.debug(tokensToAdd);
+
+        if(!tokensToAdd.isEmpty() || !invalidTokens.isEmpty()) {
+            System.debug(JSON.serialize(tokensToAdd));
+            throw new ScriptInterpolationException('Invalid API names. ' + JSON.serialize(tokensToAdd) + ':::' + JSON.serialize(invalidTokens));
+        }
 
         // Sorting queried data into fieldData map. The key is the field api name.
         for(String key: fieldData.keySet()) {
@@ -91,6 +111,73 @@ public class ScriptTemplateHandler {
         return newScript;
     }
 
+    private static Set<String> validateValidTags(Set<String> invalidTokens) {
+        Map <String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
+        Set<String> invalidTags = new Set<String>();
+        for(String tag: invalidTokens) {
+            List<String> exprComponents = tag.split('[\\{\\.\\}]');//oppForValidation
+            exprComponents = ScriptTemplateHandler.removeBlanks(exprComponents);
+            System.debug(exprComponents.size());
+            System.debug(exprComponents);
+            if(!exprComponents[0].equalsIgnoreCase('Opportunity') || exprComponents.size() < 2 || exprComponents.size() > 3) {
+                invalidTags.add(tag);
+                continue;
+            }
+            Map <String, Schema.SObjectField> fieldMap = Opportunity.getSObjectType().getDescribe().fields.getMap();
+            List<String> fieldNames = new List<String>();
+            for(SObjectField field: fieldMap.values()) 
+                fieldNames.add(field.getDescribe().name);
+            try{
+                if(exprComponents[1].equalsIgnoreCase('Account'))
+                    exprComponents[1] = 'AccountId';
+               if(exprComponents.size() == 2) {
+                    if(!fieldNames.contains(exprComponents[1])) {
+                        System.debug(exprComponents[1]);
+                        invalidTags.add(tag);
+                        continue;
+                    }
+                    if(exprComponents[1].endsWith('__r')) {
+                        System.debug(exprComponents[1]);
+                        invalidTags.add(tag);
+                        continue;
+                    }
+                } else {
+                    if(exprComponents[1].endsWith('__c')) {
+                        System.debug(exprComponents[1]);
+                        invalidTags.add(tag);
+                        continue;
+                    }
+                    if(!fieldNames.contains(exprComponents[1])) {
+                        System.debug(exprComponents[1]);
+                        invalidTags.add(tag);
+                        continue;
+                    } else {
+                        String oppField = exprComponents[1].replace('__r', '__c');
+                        Schema.SObjectField SOField = fieldMap.get(oppField);
+                        String relationshipName = SOField.getDescribe().getRelationshipName();
+
+                        System.debug(oppField);
+                        System.debug(relationshipName);
+                        Map <String, Schema.SObjectField> relationFieldMap = schemaMap.get(relationshipName).getDescribe().fields.getMap();
+                        List<String> relationFieldNames = new List<String>();
+                        for(SObjectField field: relationFieldMap.values()) 
+                            relationFieldNames.add(field.getDescribe().name);
+                        if(!relationFieldNames.contains(exprComponents[2])) {
+                            System.debug(exprComponents[1]);
+                            invalidTags.add(tag);
+                            continue;
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                System.debug(e.getMessage());
+                invalidTags.add(tag);
+            }
+        }
+        System.debug(invalidTags);
+        return invalidTags;      
+    }
+
     private static boolean stringListContainsIgnoreCase(List<String> strList, String str) {
         for(String s: strList) {
             if(str.containsIgnoreCase(s))
@@ -99,7 +186,7 @@ public class ScriptTemplateHandler {
         return false;
     }
 
-    private static List<String> removeBlanks(List<String> strList) {
+    public static List<String> removeBlanks(List<String> strList) {
         List<String> newList = new List<String>();
         for(String str: strList) {
             if(String.isNotBlank(str))

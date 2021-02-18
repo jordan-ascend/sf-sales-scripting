@@ -1,4 +1,4 @@
-public class ScriptEditorController {
+public with sharing class ScriptEditorController {
     public String scriptName {get;set;}
     public String script {get;set;} // May also need blob depending on how rich text editor works.
     public String selectedStage {get;set;}
@@ -9,12 +9,12 @@ public class ScriptEditorController {
     public Set<String> invalidTags {get;set;}
     public Boolean active {get;set;}
     public Boolean displayModel {get;set;}
-    public Boolean showInvalidList {
-        get {
-            return !invalidTags.isEmpty();
-        }
-        private set;
-    }
+    // public Boolean showInvalidList {
+    //     get {
+    //         return !invalidTags.isEmpty();
+    //     }
+    //     private set;
+    // }
     public Boolean showToAddList {
         get {
             return !tagsToAdd.isEmpty();
@@ -23,17 +23,17 @@ public class ScriptEditorController {
     }
     public Sales_Rep_Script__c scriptObject {get;set;}
     public String testResponse {get;set;}
-    private Opportunity oppForValidation {
-        get {
-            if(oppForValidation==null) {
-                oppForValidation = [SELECT Id FROM Opportunity LIMIT 1];
-                return oppForValidation;
-            } else {
-                return oppForValidation;
-            }
-        }
-        set;
-    }
+    // private Opportunity oppForValidation {
+    //     get {
+    //         if(oppForValidation==null) {
+    //             oppForValidation = [SELECT Id FROM Opportunity LIMIT 1];
+    //             return oppForValidation;
+    //         } else {
+    //             return oppForValidation;
+    //         }
+    //     }
+    //     set;
+    // }
 
     public ScriptEditorController() {
         Id id = ApexPages.currentPage().getParameters().get('id');
@@ -55,17 +55,13 @@ public class ScriptEditorController {
     }
 
     public PageReference saveScript() {
+        System.debug('Attempting Save...');
         try {
             scriptObject.Active__c = this.active;
             String validationResult = validateTemplateTags(); 
-            if(String.isBlank(validationResult))
+            if(String.isBlank(validationResult)) {
                 upsert scriptObject;
-            else {
-                // List<Object> tagList = (List<Object>)JSON.deserializeUntyped(validationResult.substring(validationResult.indexOf('['), validationResult.indexOf(']')+1));
-                // System.debug(tagList.size());
-                // for(Object str: tagList)
-                //     tagsToAdd.add((String)str);
-                // validateValidTags();
+            } else {
                 System.debug(validationResult);
                 setInvalidTagsSets(validationResult);
                 displayModel = true;
@@ -81,10 +77,11 @@ public class ScriptEditorController {
     }
 
     private String validateTemplateTags() {
-        Opportunity opp = oppForValidation;
+        // Opportunity opp = oppForValidation;
+        ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
 
         try{
-            ScriptTemplateHandler.interpolateScript(scriptObject.Script__c, opp.Id);
+            hndlr.interpolateScript(scriptObject.Script__c, null);
         } catch(ScriptInterpolationException e) {
             String erMsg = e.getMessage();
             System.debug(erMsg);
@@ -109,8 +106,9 @@ public class ScriptEditorController {
         Set<String> strSet = new Set<String>();
         List<Object> deserializedObjects = (List<Object>)JSON.deserializeUntyped(str.substring(str.indexOf('['), str.indexOf(']')+1));
         System.debug(deserializedObjects.size());
-        for(Object strObj: deserializedObjects)
+        for(Object strObj: deserializedObjects) {
             strSet.add((String)strObj);
+        }
         return strSet;
     }
 
@@ -166,7 +164,10 @@ public class ScriptEditorController {
 
     public void saveNewTags() {
         Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
+        System.debug(tagsToAdd);
+        String tagsToAddString = '';
         for(String tag: tagsToAdd) {
+            System.debug(tag);
             List<String> exprComponents = tag.split('[\\{\\.\\}]');
             exprComponents = ScriptTemplateHandler.removeBlanks(exprComponents);
             Metadata.CustomMetadata tagsMetadata = new Metadata.CustomMetadata();
@@ -176,16 +177,20 @@ public class ScriptEditorController {
 
             Metadata.CustomMetadataValue tagField = new Metadata.CustomMetadataValue();
             tagField.field = 'Field_Name__c';
-            tagField.value = tag;
+            System.debug(exprComponents[0] + '.' + exprComponents[1] + (exprComponents.size() == 3 ? '.' + exprComponents[2] : ''));
+            tagField.value = exprComponents[0] + '.' + exprComponents[1] + (exprComponents.size() == 3 ? '.' + exprComponents[2] : '');
 
             tagsMetadata.values.add(tagField);
             mdContainer.addMetadata(tagsMetadata);
+            tagsToAddString += '\n' + tag;
         }
 
         MetadataCallback mdCallBack = new MetadataCallback();
         Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, mdCallBack);
+        
         System.debug('Script Editor Tag Metadata Deployment. Job Id: ' + jobId);
         closeModal();
-        saveScript();
+        templateTags += tagsToAddString;
+        // getTemplateTags();
     }
 }

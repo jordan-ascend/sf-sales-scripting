@@ -4,8 +4,8 @@
  */
 public class ScriptTemplateHandler {
 
-    private static final List<String> ALLOWED_TOKENS = getAllowedTokens();
-    // private static final List<String> ALLOWED_TOKENS = new List<String>{
+    private  List<String> ALLOWED_TOKENS;
+    // private  final List<String> ALLOWED_TOKENS = new List<String>{
     //     'Opportunity.Amount',
     //     'Opportunity.CloseDate',
     //     'Opportunity.Description',
@@ -21,7 +21,8 @@ public class ScriptTemplateHandler {
      * Scans scripts and looks for tags, {Opportunity.someField__c} and dynamically replace them with info 
      * related to the current opp being looked at.
      */
-    public static String interpolateScript(String script, Id oppId) {
+    public String interpolateScript(String script, Id oppId) {
+        ALLOWED_TOKENS = getAllowedTokens();
         // Matches patterns such as {firstWord.SecondWord} or {opportunity.name}
         List<String> exprList = AscendUtils.getMatchedExpressions(script, '\\{\\w+[\\.\\w+]+\\w+\\}');
         
@@ -40,8 +41,9 @@ public class ScriptTemplateHandler {
             if(stringListContainsIgnoreCase(ALLOWED_TOKENS, expr)) {
                 if(exprComponents.size() > 3) throw new ScriptInterpolationException('API field name cannot go more than one level deep.');
                 if(exprComponents[0] != 'Opportunity') throw new ScriptInterpolationException('Tag must start with "Opportunity. i.e. {Opportunity.Name}');
-                fieldData.put(exprComponents[1]+(exprComponents.size()==3?'.'+exprComponents[2]:''), null);
-                regexExprMap.put(exprComponents[1]+(exprComponents.size()==3?'.'+exprComponents[2]:''), '\\{' + exprComponents[0] + '\\.' + exprComponents[1] + (exprComponents.size()==3?'\\.' + exprComponents[2]:'') + '\\}');
+                String key = exprComponents[1]+(exprComponents.size()==3?'.'+exprComponents[2]:'');
+                fieldData.put(key, null);
+                regexExprMap.put(key, '\\{' + exprComponents[0] + '\\.' + exprComponents[1] + (exprComponents.size()==3?'\\.' + exprComponents[2]:'') + '\\}');
             }
             else {
                 tokensToAdd.add(expr);
@@ -57,15 +59,20 @@ public class ScriptTemplateHandler {
         tmpList.add('Id');
         String qryStr = 'SELECT ' + String.join(tmpList, ',') + ' FROM Opportunity WHERE Id = \'' + oppId + '\'';
         System.debug(qryStr);
-        SObject opp = Database.query(qryStr)[0];
-
-        
+        SObject opp;
+        if(!String.isBlank(oppId)) {
+            opp = Database.query(qryStr)[0];
+        } else {
+            opp = new Opportunity(Name = 'Temp Opp For Validation');
+        }
 
         invalidTokens = validateValidTags(tokensToAdd);
         for(String tag: invalidTokens) {
             if(tokensToAdd.contains(tag))
                 tokensToAdd.remove(tag);
         }  
+
+        System.debug(opp);
         
         System.debug(invalidTokens);
         System.debug(tokensToAdd);
@@ -77,16 +84,24 @@ public class ScriptTemplateHandler {
 
         // Sorting queried data into fieldData map. The key is the field api name.
         for(String key: fieldData.keySet()) {
-            List<String> keyCmp = key.split('\\.');
-            System.debug(key);
-            System.debug(keyCmp);
-            if(keyCmp.size() < 2)
-                fieldData.put(key, String.valueOf(opp.get(key)));
-            else
-                fieldData.put(key, String.valueOf(opp.getSObject(keyCmp[0]).get(keyCmp[1])));
-            if(fieldData.get(key) == null)
+            try {
+                List<String> keyCmp = key.split('\\.');
+                System.debug(key);
+                System.debug(keyCmp);
+                if(keyCmp.size() < 2) {
+                    fieldData.put(key, String.valueOf(opp?.get(key)));
+                } else {
+                    fieldData.put(key, String.valueOf(opp?.getSObject(keyCmp[0])?.get(keyCmp[1])));
+                }
+                if(fieldData.get(key) == null)
+                    fieldData.put(key, '[No data for ' + key + ']');
+            } catch (Exception e) {
+                invalidTokens.add(regexExprMap.get(key));
                 fieldData.put(key, '[No data for ' + key + ']');
+            }
         }
+
+        
 
         System.debug(regexExprMap);
         System.debug(fieldData);
@@ -111,12 +126,12 @@ public class ScriptTemplateHandler {
         return newScript;
     }
 
-    private static Set<String> validateValidTags(Set<String> invalidTokens) {
+    private Set<String> validateValidTags(Set<String> invalidTokens) {
         Map <String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
         Set<String> invalidTags = new Set<String>();
         for(String tag: invalidTokens) {
             List<String> exprComponents = tag.split('[\\{\\.\\}]');//oppForValidation
-            exprComponents = ScriptTemplateHandler.removeBlanks(exprComponents);
+            exprComponents = removeBlanks(exprComponents);
             System.debug(exprComponents.size());
             System.debug(exprComponents);
             if(!exprComponents[0].equalsIgnoreCase('Opportunity') || exprComponents.size() < 2 || exprComponents.size() > 3) {
@@ -178,7 +193,7 @@ public class ScriptTemplateHandler {
         return invalidTags;      
     }
 
-    private static boolean stringListContainsIgnoreCase(List<String> strList, String str) {
+    private boolean stringListContainsIgnoreCase(List<String> strList, String str) {
         for(String s: strList) {
             if(str.containsIgnoreCase(s))
                 return true;
@@ -195,7 +210,7 @@ public class ScriptTemplateHandler {
         return newList;
     }
 
-    private static List<String> getAllowedTokens() {
+    private List<String> getAllowedTokens() {
         List<String> tags = new List<String>();
         for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
             tags.add(templateTagObj.Field_Name__c);

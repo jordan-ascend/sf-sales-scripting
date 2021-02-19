@@ -47,7 +47,7 @@ public class ScriptEditorCtrl_Test {
     @isTest
     static void createScriptTemplate() {
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
+        // ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
         String interpMsg;
 
         Test.startTest();
@@ -57,7 +57,7 @@ public class ScriptEditorCtrl_Test {
         ctrl.saveScript();
 
         Sales_Rep_Script__c scriptObject = [SELECT Name, Script__c, OpportunityStage__c, OpportunityType__c, UserRole__c, scriptUser__c FROM Sales_Rep_Script__c WHERE Id = :ctrl.scriptObject.Id];
-        interpMsg = hndlr.interpolateScript(scriptObject.Script__c, opp.Id);
+        interpMsg = ScriptTemplateHandler.interpolateScript(scriptObject.Script__c, opp.Id);
         Test.stopTest();
 
         System.assertEquals('Preamble to the Constitution', scriptObject.Name);
@@ -67,7 +67,7 @@ public class ScriptEditorCtrl_Test {
     @isTest
     static void createScriptTemplateUnauthorizedTag() {
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
+        // ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
         String interpMsg;
 
         Test.startTest();
@@ -95,8 +95,42 @@ public class ScriptEditorCtrl_Test {
         ScriptEditorController ctrl = getScriptCtrl();
         ctrl.tagsToAdd.add('{TestTest.TestTest}');
         ctrl.saveNewTags();
+        MetadataCallback m = new MetadataCallback();
+        Metadata.DeployResult dr = new Metadata.DeployResult();
+        Metadata.DeployCallbackContext dcc = new Metadata.DeployCallbackContext();
+        m.handleResult(dr, dcc);
         Test.stopTest();
         // Can't assert that custom metadata has been deployed.
+    }
+
+    @isTest
+    static void testInvalidTags() {
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        // ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
+        String interpMsg;
+
+        Test.startTest();
+        ScriptEditorController ctrl = getScriptCtrl();
+        ctrl.scriptObject.Script__c = '{Invalid.Description}{Opportunity.Invalid} {Opportunity.Description__r} {Opportunity.Account__c.Name} {Opportunity.Description.Too.Many} {Opportunity} {Opportunity.Account.invalid}';
+        ctrl.scriptObject.OpportunityStage__c = 'Prospecting';
+        ctrl.saveScript();
+
+        Integer scriptObjectCount = [SELECT Id FROM Sales_Rep_Script__c].size();
+        Test.stopTest();
+
+        System.assertEquals(0, scriptObjectCount);
+        System.assert(ctrl.invalidTags.contains('{Invalid.Description}'));
+        System.assert(ctrl.invalidTags.contains('{Opportunity.Invalid}'));
+        System.assert(ctrl.invalidTags.contains('{Opportunity.Description__r}'));
+        System.assert(ctrl.invalidTags.contains('{Opportunity.Account__c.Name}'));
+        System.assert(ctrl.invalidTags.contains('{Opportunity.Description.Too.Many}'));
+        System.assert(ctrl.invalidTags.contains('{Opportunity.Account.invalid}'));
+        System.assert(ctrl.invalidTags.contains('{Opportunity}'));
+        System.assertEquals(true, ctrl.displayModel);
+
+        ctrl.closeModal();
+
+        System.assert(ctrl.tagsToAdd.isEmpty());
     }
 
     static String getScriptMessage() {

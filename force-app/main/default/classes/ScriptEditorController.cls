@@ -78,10 +78,10 @@ public with sharing class ScriptEditorController {
 
     private String validateTemplateTags() {
         // Opportunity opp = oppForValidation;
-        ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
+        // ScriptTemplateHandler hndlr = new ScriptTemplateHandler();
 
         try{
-            hndlr.interpolateScript(scriptObject.Script__c, null);
+            ScriptTemplateHandler.interpolateScript(scriptObject.Script__c, null);
         } catch(ScriptInterpolationException e) {
             String erMsg = e.getMessage();
             System.debug(erMsg);

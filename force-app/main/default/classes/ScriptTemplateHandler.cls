@@ -4,7 +4,7 @@
  */
 public class ScriptTemplateHandler {
 
-    private  List<String> ALLOWED_TOKENS;
+    private static List<String> ALLOWED_TOKENS;
     // private  final List<String> ALLOWED_TOKENS = new List<String>{
     //     'Opportunity.Amount',
     //     'Opportunity.CloseDate',
@@ -21,7 +21,7 @@ public class ScriptTemplateHandler {
      * Scans scripts and looks for tags, {Opportunity.someField__c} and dynamically replace them with info 
      * related to the current opp being looked at.
      */
-    public String interpolateScript(String script, Id oppId) {
+    public static String interpolateScript(String script, Id oppId) {
         ALLOWED_TOKENS = getAllowedTokens();
         // Matches patterns such as {firstWord.SecondWord} or {opportunity.name}
         List<String> exprList = AscendUtils.getMatchedExpressions(script, '\\{\\w+[\\.\\w+]+\\w+\\}');
@@ -126,7 +126,7 @@ public class ScriptTemplateHandler {
         return newScript;
     }
 
-    private Set<String> validateValidTags(Set<String> invalidTokens) {
+    private static Set<String> validateValidTags(Set<String> invalidTokens) {
         Map <String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
         Set<String> invalidTags = new Set<String>();
         for(String tag: invalidTokens) {
@@ -151,11 +151,11 @@ public class ScriptTemplateHandler {
                         invalidTags.add(tag);
                         continue;
                     }
-                    if(exprComponents[1].endsWith('__r')) {
-                        System.debug(exprComponents[1]);
-                        invalidTags.add(tag);
-                        continue;
-                    }
+                    // if(exprComponents[1].endsWith('__r')) {
+                    //     System.debug(exprComponents[1]);
+                    //     invalidTags.add(tag);
+                    //     continue;
+                    // }
                 } else {
                     if(exprComponents[1].endsWith('__c')) {
                         System.debug(exprComponents[1]);
@@ -193,7 +193,7 @@ public class ScriptTemplateHandler {
         return invalidTags;      
     }
 
-    private boolean stringListContainsIgnoreCase(List<String> strList, String str) {
+    private static boolean stringListContainsIgnoreCase(List<String> strList, String str) {
         for(String s: strList) {
             if(str.containsIgnoreCase(s))
                 return true;
@@ -210,7 +210,7 @@ public class ScriptTemplateHandler {
         return newList;
     }
 
-    private List<String> getAllowedTokens() {
+    private static List<String> getAllowedTokens() {
         List<String> tags = new List<String>();
         for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
             tags.add(templateTagObj.Field_Name__c);

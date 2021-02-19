@@ -58,20 +58,20 @@ public class ScriptDisplayController {
      * If any are for other users then we want to remove those before returning.
      * Because if none of the scripts are associated with the user then we assume that the are for any user.
      */
-    private static List<Sales_Rep_Script__c> getScriptsWithUser(List<Sales_Rep_Script__c> scripts) {
-        List<Sales_Rep_Script__c> matchingScripts = new List<Sales_Rep_Script__c>();
+    // private static List<Sales_Rep_Script__c> getScriptsWithUser(List<Sales_Rep_Script__c> scripts) {
+    //     List<Sales_Rep_Script__c> matchingScripts = new List<Sales_Rep_Script__c>();
 
-        for(Sales_Rep_Script__c script: scripts) {
-            if(script.scriptUser__c != null) 
-                matchingScripts.add(script);
-        }
+    //     for(Sales_Rep_Script__c script: scripts) {
+    //         if(script.scriptUser__c != null) 
+    //             matchingScripts.add(script);
+    //     }
 
-        if(matchingScripts.isEmpty()) {
-            return scripts;
-        }
+    //     if(matchingScripts.isEmpty()) {
+    //         return scripts;
+    //     }
 
-        return matchingScripts;
-    }
+    //     return matchingScripts;
+    // }
 
     /**
      * Returns the script with the most specific requirements given. I.e. A script with both a user role and an opp type

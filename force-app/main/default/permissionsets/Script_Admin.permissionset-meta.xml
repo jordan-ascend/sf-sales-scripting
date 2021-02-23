@@ -4,6 +4,10 @@
         <enabled>true</enabled>
         <name>Script_Template_Tag__mdt</name>
     </customMetadataTypeAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>Script_Metric_Page</name>
+    </customPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Opporunity_Script_Junction__c.Date_Won__c</field>

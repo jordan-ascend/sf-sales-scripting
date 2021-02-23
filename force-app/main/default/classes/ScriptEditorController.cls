@@ -1,39 +1,26 @@
 public with sharing class ScriptEditorController {
-    public String scriptName {get;set;}
-    public String script {get;set;} // May also need blob depending on how rich text editor works.
-    public String selectedStage {get;set;}
-    public String selectedOppType {get;set;}
-    public String selectedUserRole {get;set;}
+    // public String scriptName {get;set;}
+    private String script {get;set;} // May also need blob depending on how rich text editor works.
+    private String selectedStage {get;set;}
+    private String selectedOppType {get;set;}
+    private String selectedUserRole {get;set;}
     public String templateTags {get;set;}
     public Set<String> tagsToAdd {get;set;}
     public Set<String> invalidTags {get;set;}
     public Boolean active {get;set;}
     public Boolean displayModel {get;set;}
-    // public Boolean showInvalidList {
-    //     get {
-    //         return !invalidTags.isEmpty();
-    //     }
-    //     private set;
-    // }
     public Boolean showToAddList {
         get {
             return !tagsToAdd.isEmpty();
         }
         private set;
     }
+    public Boolean userFieldNotEditable {get;set;}
     public Sales_Rep_Script__c scriptObject {get;set;}
     public String testResponse {get;set;}
-    // private Opportunity oppForValidation {
-    //     get {
-    //         if(oppForValidation==null) {
-    //             oppForValidation = [SELECT Id FROM Opportunity LIMIT 1];
-    //             return oppForValidation;
-    //         } else {
-    //             return oppForValidation;
-    //         }
-    //     }
-    //     set;
-    // }
+    private PageReference returnPage {get;set;}
+    private Boolean personalEdit {get;set;}
+    private id userId {get;set;}
 
     public ScriptEditorController() {
         Id id = ApexPages.currentPage().getParameters().get('id');
@@ -48,10 +35,15 @@ public with sharing class ScriptEditorController {
     }
 
     private void commonInit() {
-        getFields();
+        // getFields();
+        this.userId = UserInfo.getUserId();
         getTemplateTags();
+        checkForScriptUserPermission();
+        returnPage = new PageReference(ApexPages.currentPage().getParameters().get('retURL'));  
         tagsToAdd = new Set<String>();
         invalidTags = new Set<String>();
+        
+        this.userFieldNotEditable = this.personalEdit;
     }
 
     public PageReference saveScript() {
@@ -73,7 +65,32 @@ public with sharing class ScriptEditorController {
             return null;
         }
         PageReference redirectSuccess = new ApexPages.StandardController(scriptObject).view();
-        return (redirectSuccess);
+        // return (redirectSuccess);
+        return returnPage;
+    }
+
+    private void checkForScriptUserPermission() {
+        System.debug(this.userId);
+        Integer i = [SELECT Id FROM PermissionSetAssignment
+                     WHERE AssigneeId = :this.userId AND PermissionSet.Name = 'Script_User'].size();
+
+        if(i == 1) {
+            this.personalEdit = true;
+            if(this.scriptObject.scriptUser__c == null || this.scriptObject.scriptUser__c != this.userId) {
+                this.scriptObject.Id = null;
+                this.scriptObject.scriptUser__c = this.userId;
+                this.scriptObject.Name = this.scriptObject.Name + ' [Personalized by ' + UserInfo.getName() + ']';
+            }
+        } else {
+            this.personalEdit = false;
+        }
+
+        System.debug(this.personalEdit);
+    }
+
+    public Pagereference processUserChange() {
+        System.debug('Touched');
+        return null;
     }
 
     private String validateTemplateTags() {

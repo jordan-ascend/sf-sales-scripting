@@ -41,7 +41,9 @@
             </apex:pageBlockSection>
             <!-- User -->
             <apex:pageBlockSection >
-                <apex:inputField label="User" value="{!scriptObject.scriptUser__c}"/>
+                <apex:inputField id="user-input" label="User" value="{!scriptObject.scriptUser__c}" >
+                    <apex:actionSupport event="onChange" action="{!processUserChange}" rerender="user-input"  />
+                </apex:inputField>
             </apex:pageBlockSection>
             <!-- Active Checkbox -->
             <apex:pageBlockSection>

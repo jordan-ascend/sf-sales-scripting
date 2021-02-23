@@ -7,11 +7,12 @@
                     value={scriptObject.data.jgaude__Script__c}
                     ></lightning-formatted-rich-text>
                 </div>
-                <div>
+                <div class="slds-m-vertical_xx-small">
                     <lightning-button name="readButton" variant="brand" label="Mark As Read" title="Mark As Read" onclick={markRead} class="slds-m-left_x-small"></lightning-button>
                 </div>
-                <div>
-                    <lightning-button style="margin-top: 20px;" name="refreshButton" variant="brand" label="Refresh" title="Refresh" onclick={getNewScript} class="slds-m-left_x-small"></lightning-button>
+                <div class="slds-m-vertical_xx-small">
+                    <lightning-button name="refreshButton" variant="brand" label="Refresh" title="Refresh" onclick={getNewScript} class="slds-m-left_x-small"></lightning-button>
+                    <lightning-button name="editButton" variant="brand" label="Edit" title="Edit" onclick={goToScriptRecord} class="slds-m-left_x-small"></lightning-button>
                 </div>
             </template>
             <template if:true={error}>

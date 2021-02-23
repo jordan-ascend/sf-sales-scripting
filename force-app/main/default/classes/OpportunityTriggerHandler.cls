@@ -9,6 +9,35 @@ public class OpportunityTriggerHandler {
     public static void afterUpdate(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
         updateMetricObject(oldOpps, newOpps);
         updateScriptJunctionObject(oldOpps, newOpps);
+        firePlatformEvents(oldOpps, newOpps);
+    }
+
+    private static void firePlatformEvents(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
+        List<SObject> events = new List<SObject>();
+
+        for(Id oppId: oldOpps.keySet()) {
+            if(oldOpps.get(oppId).get('StageName') != newOpps.get(oppId).get('StageName')) {
+                Opportunity_Listen__e ol = new Opportunity_Listen__e(
+                    Message__c = 'Stage updated.',
+                    OpportunityId__c = String.valueOf(oppId)
+                );
+                events.add(ol);
+            }
+        }
+        List<Database.SaveResult> saveResults = Eventbus.publish(events);
+        for(Database.SaveResult sr: saveResults) {
+            if (sr.isSuccess()) {
+                System.debug('Successfully published event. ID: ' + sr.getId());
+            } else {
+                for(Database.Error err : sr.getErrors()) {
+                    System.debug('Error returned: ' +
+                                err.getStatusCode() +
+                                ' - ' +
+                                err.getMessage());
+                }
+            }
+        }
+        
     }
 
     private static void updateMetricObject(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {

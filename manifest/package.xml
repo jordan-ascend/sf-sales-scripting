@@ -31,7 +31,7 @@
     <types>
         <members>*</members>
         <name>StaticResource</name>
-    </types>-->
+    </types>
     <types>
         <members>Script_Metric__c</members>
         <members>*</members>
@@ -41,6 +41,11 @@
         <members>Opporunity_Script_Junction__c</members>
         <members>*</members>
         <name>CustomObject</name>
+    </types>-->
+    <types>
+        <members>Test_Permissions_For_User</members>
+        <members>*</members>
+        <name>PermissionSet</name>
     </types>
     <version>50.0</version>
 </Package>

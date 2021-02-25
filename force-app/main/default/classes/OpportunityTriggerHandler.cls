@@ -2,6 +2,15 @@
  * Note to come back and see if we still need this trigger handler and related trigger, OpportunityTrigger.
  */
 public class OpportunityTriggerHandler {
+
+    public static void breforeUpdate(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
+        for(Id oppId: oldOpps.keySet()) {
+            if(oldOpps.get(oppId).get('StageName') != newOpps.get(oppId).get('StageName')) {
+                ScriptDisplayController.handleMetricObject((Opportunity)oldOpps.get(oppId));
+            }
+        }
+    }
+
     public static void afterInsert(Map<Id,SObject> newOpps) {
 
     }
@@ -17,8 +26,11 @@ public class OpportunityTriggerHandler {
 
         for(Id oppId: oldOpps.keySet()) {
             if(oldOpps.get(oppId).get('StageName') != newOpps.get(oppId).get('StageName')) {
+                ScriptDisplayController.handleMetricObject((Opportunity)oldOpps.get(oppId));
+
                 Opportunity_Listen__e ol = new Opportunity_Listen__e(
                     Message__c = 'Stage updated.',
+                    Stage__c = (String)newOpps.get(oppId).get('StageName'),
                     OpportunityId__c = String.valueOf(oppId)
                 );
                 events.add(ol);

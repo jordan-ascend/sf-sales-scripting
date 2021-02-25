@@ -7,7 +7,7 @@ public class ScriptDisplayController {
      * Retreives script for opportunity.
      */
     @AuraEnabled(cacheable=true)
-    public static jgaude__Sales_Rep_Script__c getScript(Id oppId) {
+    public static Map<String,jgaude__Sales_Rep_Script__c> getScript(Id oppId) {
         Id userId = UserInfo.getUserId();
         String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
         userRoleName = userRoleName == null? '-- Any --' : userRoleName;
@@ -15,12 +15,23 @@ public class ScriptDisplayController {
 
         String oppType = opp.Type == null? '-- Any --' : opp.Type;
 
-        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, oppType, opp.StageName);
-        Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
-
-        scriptToDeliver.Script__c = ScriptTemplateHandler.interpolateScript(scriptToDeliver.Script__c, oppId);
-        System.debug(scriptToDeliver);
-        return scriptToDeliver;
+        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, oppType);
+        Map<String,List<Sales_Rep_Script__c>> buckets = putScriptsInBuckets(scripts);
+        Map<String,Sales_Rep_Script__c> scriptsMap = new Map<String,Sales_Rep_Script__c>();
+        for(String oppStage: buckets.keyset()) {
+            scriptsMap.put(oppStage, getMostSpecific(buckets.get(oppStage)));
+        }
+        // Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
+        for(String oppStage: scriptsMap.keyset()) {
+            Sales_Rep_Script__c temp = scriptsMap.get(oppStage);
+            temp.Script__c = ScriptTemplateHandler.interpolateScript(temp.Script__c, oppId);
+            scriptsMap.put(oppStage, temp);
+        }
+        // scriptToDeliver.Script__c = ScriptTemplateHandler.interpolateScript(scriptToDeliver.Script__c, oppId);
+        // System.debug(scriptToDeliver);
+        // return scriptToDeliver;
+        System.debug(scriptsMap);
+        return scriptsMap;
     }
 
     /**
@@ -47,10 +58,17 @@ public class ScriptDisplayController {
         return metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id);
     }
 
-    @AuraEnabled(cacheable=true)
-    public static jgaude__Sales_Rep_Script__c getNewScript(Id oppId) {
+    // @AuraEnabled(cacheable=true)
+    // public static jgaude__Sales_Rep_Script__c getNewScript(Id oppId) {
+    //     System.debug(oppId);
+    //     return getScript(oppId);
+    // }
+
+    @AuraEnabled
+    public static String getOppStage(Id oppId) {
         System.debug(oppId);
-        return getScript(oppId);
+        Opportunity opp = getOpportunity(oppId);
+        return opp.StageName;
     }
 
     /**
@@ -124,8 +142,17 @@ public class ScriptDisplayController {
         return mostSpecificScript;
     }
 
+    private static List<Sales_Rep_Script__c> getScriptObjects(Id oppId, Id userId, String userRoleName, String oppType) {
+        return [SELECT Name, Script__c, scriptUser__c, UserRole__c, Opportunity__c, OpportunityType__c, OpportunityStage__c
+                FROM Sales_Rep_Script__c 
+                WHERE /*OpportunityStage__c = :stage AND*/ (scriptUser__c = :userId OR scriptUser__c = null)
+                AND (Opportunity__c =: OppId OR Opportunity__c = null)
+                AND (UserRole__c = :userRoleName OR UserRole__c = '-- Any --')
+                AND (OpportunityType__c = :oppType OR OpportunityType__c = '-- Any --')];
+    }
+
     private static List<Sales_Rep_Script__c> getScriptObjects(Id oppId, Id userId, String userRoleName, String oppType, String stage) {
-        return [SELECT Name, Script__c, scriptUser__c, UserRole__c, Opportunity__c, OpportunityType__c
+        return [SELECT Name, Script__c, scriptUser__c, UserRole__c, Opportunity__c, OpportunityType__c, OpportunityStage__c
                 FROM Sales_Rep_Script__c 
                 WHERE OpportunityStage__c = :stage AND (scriptUser__c = :userId OR scriptUser__c = null)
                 AND (Opportunity__c =: OppId OR Opportunity__c = null)
@@ -138,24 +165,41 @@ public class ScriptDisplayController {
     }
 
     /**
+     * Sort scripts into buckets based on what opportunity stage they are for.
+     */
+    private static Map<String,List<Sales_Rep_Script__c>> putScriptsInBuckets(List<Sales_Rep_Script__c> scripts) {
+        Map<String,List<Sales_Rep_Script__c>> buckets = new Map<String,List<Sales_Rep_Script__c>>();
+        for(Sales_Rep_Script__c script: scripts) {
+            if(buckets.get(script.OpportunityStage__c) == null) {
+                buckets.put(script.OpportunityStage__c, new List<Sales_Rep_Script__c>{script});
+            }
+            else {
+                buckets.get(script.OpportunityStage__c).add(script);
+            }
+        }
+        return buckets;
+    }
+
+    /**
      * Handle creation or update of a Script_Metric__c record that will keep track of the scripts used for an opportunity
      */
     @AuraEnabled
-    public static void handleMetricObject(Id oppId) {
+    public static void handleMetricObject(Opportunity opp) {
+        System.debug('Running after update.');
         
         Id userId = UserInfo.getUserId();
         String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
         userRoleName = userRoleName == null? '-- Any --' : userRoleName;
         
-        Opportunity opp = getOpportunity(oppId);
+        // Opportunity opp = getOpportunity(oppId);
         
-        List<Sales_Rep_Script__c> scripts = getScriptObjects(oppId, userId, userRoleName, opp.Type, opp.StageName);
+        List<Sales_Rep_Script__c> scripts = getScriptObjects(opp.Id, userId, userRoleName, opp.Type, opp.StageName);
         if(scripts.isEmpty())
             return;
         
         Sales_Rep_Script__c script = getMostSpecific(scripts);
         
-        Script_Metric__c metric = getMetricRecord(oppId);
+        Script_Metric__c metric = getMetricRecord(opp.Id);
 
         if(metric == null) {
             metric = new Script_Metric__c();
@@ -192,19 +236,19 @@ public class ScriptDisplayController {
             update metric;
         }
 
-        Opporunity_Script_Junction__c junct = getJunctionRecord(oppId, script.Id);
+        Opporunity_Script_Junction__c junct = getJunctionRecord(opp.Id, script.Id);
         
         if(junct == null) {
             junct = new Opporunity_Script_Junction__c();
             junct.Opporunity_Stage__c = opp.StageName;
-            junct.Opportunity__c = oppId;
+            junct.Opportunity__c = opp.Id;
             junct.Sales_Rep_Script__c = script.Id;
             insert junct;
         }
         else if(junct != null && junct.Related_User_Id__c == null && script.scriptUser__c == UserInfo.getUserId()) {
             junct = new Opporunity_Script_Junction__c();
             junct.Opporunity_Stage__c = opp.StageName;
-            junct.Opportunity__c = oppId;
+            junct.Opportunity__c = opp.Id;
             junct.Sales_Rep_Script__c = script.Id;
             insert junct;
         }

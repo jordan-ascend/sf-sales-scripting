@@ -23,10 +23,10 @@ public class ScriptDisplayController_Test {
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
 
         Test.startTest();
-        Sales_Rep_Script__c script = ScriptDisplayController.getScript(opp.Id);
+        Map<String,Sales_Rep_Script__c> scriptMap = ScriptDisplayController.getScript(opp.Id);
         Test.stopTest();
 
-        System.assertEquals('Script 1', script.Name);
+        System.assertEquals('Script 1', scriptMap.get('Prospecting').Name);
     }
 
     @isTest
@@ -34,13 +34,13 @@ public class ScriptDisplayController_Test {
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
         User u = [SELECT Id FROM User WHERE Email LIKE 'testUser%'];
 
-        Sales_Rep_Script__c script;
+        Map<String,Sales_Rep_Script__c> scriptMap;
         System.runAs(u) {
             Test.startTest();
-            script = ScriptDisplayController.getScript(opp.Id);
+            scriptMap = ScriptDisplayController.getScript(opp.Id);
             Test.stopTest();
         }
 
-        System.assertEquals('Script 2', script.Name);
+        System.assertEquals('Script 2', scriptMap.get('Prospecting').Name);
     }
 }

@@ -21,18 +21,18 @@ public class ScriptDisplayCtrl_Test {
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
 
         Test.startTest();
-        Sales_Rep_Script__c script2 = ScriptDisplayController.getScript(opp.Id);
+        Map<String,Sales_Rep_Script__c> scriptMap = ScriptDisplayController.getScript(opp.Id);
         Test.stopTest();
 
-        System.assertEquals(script1.Id, script2.Id);
+        System.assertEquals(script1.Id, scriptMap.get('Prospecting').Id);
     }
 
     @isTest
     static void testHandleMetric() {
-        Opportunity opp = [SELECT StageName FROM Opportunity];
+        Opportunity opp = [SELECT StageName, Type FROM Opportunity];
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp.Id);
+        ScriptDisplayController.handleMetricObject(opp);
         Test.stopTest();
 
         Script_Metric__c metric = [SELECT Opportunity_Stage__c, Opportunity_Won__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :opp.Id];
@@ -44,17 +44,17 @@ public class ScriptDisplayCtrl_Test {
 
     @isTest
     static void testHandleMetricWithUserId() {
-        Opportunity opp = [SELECT StageName FROM Opportunity];
+        Opportunity opp = [SELECT StageName, Type FROM Opportunity];
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
         
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp.Id);
+        ScriptDisplayController.handleMetricObject(opp);
         script1.scriptUser__c = UserInfo.getUserId();
         update script1;
-        ScriptDisplayController.handleMetricObject(opp.Id);
+        ScriptDisplayController.handleMetricObject(opp);
         script1.scriptUser__c = null;
         update script1;
-        ScriptDisplayController.handleMetricObject(opp.Id);
+        ScriptDisplayController.handleMetricObject(opp);
         Test.stopTest();
 
         Script_Metric__c metric = [SELECT Opportunity_Stage__c, Opportunity_Won__c, Scripts_Used__c, Related_User__c FROM Script_Metric__c 
@@ -69,10 +69,10 @@ public class ScriptDisplayCtrl_Test {
 
     @isTest
     static void testShouldButtonBeDisabled() {
-        Opportunity opp = [SELECT StageName FROM Opportunity];
+        Opportunity opp = [SELECT StageName, Type FROM Opportunity];
 
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp.Id);
+        ScriptDisplayController.handleMetricObject(opp);
         Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
         Test.stopTest();
 
@@ -81,10 +81,10 @@ public class ScriptDisplayCtrl_Test {
 
     @isTest
     static void testShouldButtonBeDisabledNoScript() {
-        Opportunity opp = [SELECT StageName FROM Opportunity];
+        Opportunity opp = [SELECT StageName, Type FROM Opportunity];
 
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp.Id);
+        ScriptDisplayController.handleMetricObject(opp);
         opp.StageName = 'Qualification';
         update opp;
         Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);

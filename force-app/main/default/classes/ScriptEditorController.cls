@@ -18,7 +18,7 @@ public with sharing class ScriptEditorController {
     public Boolean userFieldNotEditable {get;set;}
     public Sales_Rep_Script__c scriptObject {get;set;}
     public String testResponse {get;set;}
-    private PageReference returnPage {get;set;}
+    // private PageReference returnPage {get;set;}
     private Boolean personalEdit {get;set;}
     private id userId {get;set;}
 
@@ -39,7 +39,7 @@ public with sharing class ScriptEditorController {
         this.userId = UserInfo.getUserId();
         getTemplateTags();
         checkForScriptUserPermission();
-        returnPage = new PageReference(ApexPages.currentPage().getParameters().get('retURL'));  
+        // returnPage = new PageReference(ApexPages.currentPage().getParameters().get('retURL'));  
         tagsToAdd = new Set<String>();
         invalidTags = new Set<String>();
         
@@ -50,6 +50,7 @@ public with sharing class ScriptEditorController {
         System.debug('Attempting Save...');
         try {
             scriptObject.Active__c = this.active;
+            System.debug('State of Active__c ' + this.active);
             String validationResult = validateTemplateTags(); 
             if(String.isBlank(validationResult)) {
                 upsert scriptObject;
@@ -61,12 +62,13 @@ public with sharing class ScriptEditorController {
             }
         } catch(System.DMLException e) {
             ApexPages.addMessages(e);
+            System.debug('DML Exception:' + e.getMessage() + '\n' + e.getStackTraceString());
             System.debug('return null DML Exception');
             return null;
         }
         PageReference redirectSuccess = new ApexPages.StandardController(scriptObject).view();
-        // return (redirectSuccess);
-        return returnPage;
+        return (redirectSuccess);
+        // return returnPage;
     }
 
     private void checkForScriptUserPermission() {

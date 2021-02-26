@@ -23,7 +23,7 @@ public class ScriptEditorCtrl_Test {
         ctrl.scriptObject.OpportunityType__c = ctrl.getOppTypeList()[0].getValue();
         ctrl.scriptObject.UserRole__c = ctrl.getUserRoleList()[0].getValue();
         ctrl.scriptObject.scriptUser__c = u.Id;
-        ctrl.scriptObject.Active__c = true;
+        ctrl.Active = true;
         return ctrl;
     }
 

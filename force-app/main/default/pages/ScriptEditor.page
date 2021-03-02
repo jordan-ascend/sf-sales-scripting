@@ -19,19 +19,19 @@
             </apex:pageBlockSection>
             <!-- Stage picklist -->
             <apex:pageBlockSection >
-                <apex:selectList label="Stage" title="Stage for script to appear." value="{!scriptObject.OpportunityStage__c}" multiselect="false" size="1">
+                <apex:selectList label="Stage" title="Stage for script to appear." value="{!scriptObject.OpportunityStage__c}" multiselect="false" size="1" disabled="{!IsReadOnly}">
                     <apex:selectOptions value="{!stageList}"/>
                 </apex:selectList>
             </apex:pageBlockSection>
             <!-- Opportunity Type picklist -->
             <apex:pageBlockSection >
-                <apex:selectList label="Opportunity Type" title="Opportunity type for script to appear." value="{!scriptObject.OpportunityType__c}" multiselect="false" size="1">
+                <apex:selectList label="Opportunity Type" title="Opportunity type for script to appear." value="{!scriptObject.OpportunityType__c}" multiselect="false" size="1" disabled="{!IsReadOnly}">
                     <apex:selectOptions value="{!oppTypeList}"/>
                 </apex:selectList>
             </apex:pageBlockSection>
             <!-- User role -->
             <apex:pageBlockSection >
-                <apex:selectList label="User Role" title="User role for script to appear." value="{!scriptObject.UserRole__c}" multiselect="false" size="1">
+                <apex:selectList label="User Role" title="User role for script to appear." value="{!scriptObject.UserRole__c}" multiselect="false" size="1" disabled="{!IsReadOnly}">
                     <apex:selectOptions value="{!userRoleList}"/>
                 </apex:selectList>
             </apex:pageBlockSection>
@@ -41,13 +41,14 @@
             </apex:pageBlockSection>
             <!-- User -->
             <apex:pageBlockSection >
-                <apex:inputField id="user-input" label="User" value="{!scriptObject.scriptUser__c}" >
-                    <apex:actionSupport event="onChange" action="{!processUserChange}" rerender="user-input"  />
+                <apex:inputField id="user-input" label="User" value="{!scriptObject.scriptUser__c}" onchange="ProcUrsChange()">
+                    <!-- <apex:actionSupport event="onChange" action="{!processUserChange}" rerender="user-input"  /> -->
                 </apex:inputField>
             </apex:pageBlockSection>
             <!-- Active Checkbox -->
             <apex:pageBlockSection>
-                <apex:inputCheckbox label="Active" value="{!active}"/>
+                <apex:inputField label="Active" value="{!scriptObject.active__c}"/>
+                <!-- <apex:inputCheckbox label="Active" value="{!active}" disabled="{!IsReadOnly}"/> -->
             </apex:pageBlockSection>
             <!-- Save/Cancel buttons -->
             <apex:pageBlockButtons >
@@ -82,6 +83,8 @@
                 </div>
             </apex:outputPanel>
         </apex:outputPanel>
+        <!-- So we can keep User and opportunity from changing -->
+        <apex:actionFunction name="ProcUrsChange" action="{!processUserChange}"/>
     </apex:form>
     <apex:outputText value="{!testResponse}"/>
 

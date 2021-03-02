@@ -17,6 +17,7 @@ public with sharing class ScriptEditorController {
     }
     public Boolean userFieldNotEditable {get;set;}
     public Sales_Rep_Script__c scriptObject {get;set;}
+    private Sales_Rep_Script__c tempScript {get;set;}
     public String testResponse {get;set;}
     // private PageReference returnPage {get;set;}
     private Boolean personalEdit {get;set;}
@@ -44,17 +45,25 @@ public with sharing class ScriptEditorController {
         invalidTags = new Set<String>();
         
         this.userFieldNotEditable = this.personalEdit;
+        System.debug(getIsReadOnly());
+        // this.active = scriptObject.Active__c == null? false:scriptObject.Active__c;
     }
 
     public PageReference saveScript() {
         System.debug('Attempting Save...');
         try {
-            scriptObject.Active__c = this.active;
+            // scriptObject.Active__c = this.active;
             System.debug('State of Active__c ' + this.active);
             String validationResult = validateTemplateTags(); 
+
             if(String.isBlank(validationResult)) {
+                if(personalEdit) {
+                    validatePersonalEdit();
+                } 
                 upsert scriptObject;
+                
             } else {
+
                 System.debug(validationResult);
                 setInvalidTagsSets(validationResult);
                 showModal();
@@ -66,11 +75,38 @@ public with sharing class ScriptEditorController {
             System.debug('return null DML Exception');
             return null;
         }
+        catch(ScriptValidationException e) {
+            System.debug('Validation Exception:' + e.getMessage() + '\n' + e.getStackTraceString());
+            System.debug('return null Validation Exception');
+            return null;
+        }
         PageReference redirectSuccess = new ApexPages.StandardController(scriptObject).view();
         return (redirectSuccess);
         // return returnPage;
     }
 
+    /**
+     * Make sure that only the script is being modified when creating a personalized copy of a script object.
+     */
+    private void validatePersonalEdit() {
+        List<ApexPages.Message> errs = new List<ApexPages.Message>();
+        if(scriptObject.Active__c != tempScript.Active__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));
+        if(scriptObject.Opportunity__c != tempScript.Opportunity__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));
+        if(scriptObject.OpportunityStage__c != tempScript.OpportunityStage__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));
+        if(scriptObject.OpportunityType__c != tempScript.OpportunityType__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));
+        if(scriptObject.scriptUser__c != tempScript.scriptUser__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));
+        if(scriptObject.UserRole__c != tempScript.UserRole__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));
+        if(scriptObject.Name != tempScript.Name) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Name"'));
+
+        if(!errs.isEmpty()) {
+            for(ApexPages.Message m: errs) ApexPages.addMessage(m);
+            throw new ScriptValidationException('Script Validation failed. One or more fields are now allowed to be changed');
+        }
+    }
+
+    /**
+     * Need to know if a script user is accessing this page. That affrects what can be edited.
+     */
     private void checkForScriptUserPermission() {
         System.debug(this.userId);
         Integer i = [SELECT Id FROM PermissionSetAssignment
@@ -78,11 +114,21 @@ public with sharing class ScriptEditorController {
 
         if(i == 1) {
             this.personalEdit = true;
+            
             if(this.scriptObject.scriptUser__c == null || this.scriptObject.scriptUser__c != this.userId) {
                 this.scriptObject.Id = null;
                 this.scriptObject.scriptUser__c = this.userId;
                 this.scriptObject.Name = this.scriptObject.Name + ' [Personalized by ' + UserInfo.getName() + ']';
             }
+            this.tempScript = new Sales_Rep_Script__c(
+                Active__c = this.scriptObject.Active__c,
+                Name = this.scriptObject.Name,
+                Opportunity__c = this.scriptObject.Opportunity__c,
+                OpportunityStage__c = this.scriptObject.OpportunityStage__c,
+                OpportunityType__c = this.scriptObject.OpportunityType__c,
+                scriptUser__c = this.scriptObject.scriptUser__c,
+                UserRole__c = this.scriptObject.UserRole__c
+            );
         } else {
             this.personalEdit = false;
         }
@@ -90,6 +136,9 @@ public with sharing class ScriptEditorController {
         System.debug(this.personalEdit);
     }
 
+    /**
+     * If the user tries to change anything that is not allowed to be changed, it will change back.
+     */
     public Pagereference processUserChange() {
         System.debug('Touched');
         return null;
@@ -114,6 +163,9 @@ public with sharing class ScriptEditorController {
         return null;
     }
 
+    /**
+     * pulls the erroneous tags from a string and separates them into two lists. One for tags that can be added as valid tags and ones that can't. 
+     */
     private void setInvalidTagsSets(String tags) {
         List<String> taglists = new List<String>();
         taglists.addAll(tags.split(':::'));
@@ -121,6 +173,9 @@ public with sharing class ScriptEditorController {
         invalidTags = deserializeString(taglists[1]);
     }
 
+    /**
+     * Deserializes JSON lists specifically.
+     */
     private Set<String> deserializeString(String str) {
         Set<String> strSet = new Set<String>();
         List<Object> deserializedObjects = (List<Object>)JSON.deserializeUntyped(str.substring(str.indexOf('['), str.indexOf(']')+1));
@@ -154,6 +209,9 @@ public with sharing class ScriptEditorController {
         return AscendUtils.createSelectOption(AscendUtils.getPicklistValues('Opportunity', 'Type'), true);
     }
 
+    /**
+     * Creates SelectOption list of user roles.
+     */
     public List<SelectOption> getUserRoleList() {
         List<UserRole> roles = AscendUtils.getAllUserRoles();
         List<String> rolesString = new List<String>();
@@ -164,6 +222,9 @@ public with sharing class ScriptEditorController {
         return AscendUtils.createSelectOption(rolesString, true);
     }
 
+    /**
+     * Get list of allowed template tags from custom metadata.
+     */
     private void getTemplateTags() {
         List<String> tags = new List<String>();
         for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
@@ -181,6 +242,11 @@ public with sharing class ScriptEditorController {
         displayModel = true;    
     }
 
+    public Boolean getIsReadOnly() {
+        return personalEdit;
+    }
+
+    /** Creates new metadata records for new script tags */
     public void saveNewTags() {
         Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
         System.debug(tagsToAdd);

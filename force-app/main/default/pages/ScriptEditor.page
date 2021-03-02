@@ -37,7 +37,7 @@
             </apex:pageBlockSection>
             <!-- User -->
             <apex:pageBlockSection >
-                <apex:inputField label="Opportunity" value="{!scriptObject.Opportunity__c}"/>
+                <apex:inputField id="opportunity-input" label="Opportunity" value="{!scriptObject.Opportunity__c}"/>
             </apex:pageBlockSection>
             <!-- User -->
             <apex:pageBlockSection >
@@ -84,9 +84,8 @@
             </apex:outputPanel>
         </apex:outputPanel>
         <!-- So we can keep User and opportunity from changing -->
-        <apex:actionFunction name="ProcUrsChange" action="{!processUserChange}"/>
+        <apex:actionFunction name="ProcUrsChange" action="{!processUserChange}" reRender="opportunity-input,user-input"/>
     </apex:form>
-    <apex:outputText value="{!testResponse}"/>
 
 
     <style type="text/css">

@@ -1,24 +1,23 @@
 public with sharing class ScriptEditorController {
-    // public String scriptName {get;set;}
-    private String script {get;set;} // May also need blob depending on how rich text editor works.
-    private String selectedStage {get;set;}
-    private String selectedOppType {get;set;}
-    private String selectedUserRole {get;set;}
-    public String templateTags {get;set;}
-    public Set<String> tagsToAdd {get;set;}
-    public Set<String> invalidTags {get;set;}
-    public Boolean active {get;set;}
-    public Boolean displayModel {get;set;}
+    public Boolean userFieldNotEditable {get;set;}
     public Boolean showToAddList {
         get {
             return !tagsToAdd.isEmpty();
         }
         private set;
     }
-    public Boolean userFieldNotEditable {get;set;}
-    public Sales_Rep_Script__c scriptObject {get;set;}
+    @testVisible private Sales_Rep_Script__c scriptObject {get;set;}
     private Sales_Rep_Script__c tempScript {get;set;}
-    public String testResponse {get;set;}
+    // public String scriptName {get;set;}
+    private String script {get;set;} // May also need blob depending on how rich text editor works.
+    private String selectedStage {get;set;}
+    private String selectedOppType {get;set;}
+    private String selectedUserRole {get;set;}
+    private String templateTags {get;set;}
+    @testVisible private Set<String> tagsToAdd {get;set;}
+    private Set<String> invalidTags {get;set;}
+    // private Boolean active {get;set;}
+    private Boolean displayModel {get;set;}
     // private PageReference returnPage {get;set;}
     private Boolean personalEdit {get;set;}
     private id userId {get;set;}
@@ -38,7 +37,7 @@ public with sharing class ScriptEditorController {
     private void commonInit() {
         // getFields();
         this.userId = UserInfo.getUserId();
-        getTemplateTags();
+        getTemplateTagsMDT();
         checkForScriptUserPermission();
         // returnPage = new PageReference(ApexPages.currentPage().getParameters().get('retURL'));  
         tagsToAdd = new Set<String>();
@@ -53,14 +52,18 @@ public with sharing class ScriptEditorController {
         System.debug('Attempting Save...');
         try {
             // scriptObject.Active__c = this.active;
-            System.debug('State of Active__c ' + this.active);
+            // System.debug('State of Active__c ' + this.active);
             String validationResult = validateTemplateTags(); 
 
             if(String.isBlank(validationResult)) {
                 if(personalEdit) {
                     validatePersonalEdit();
                 } 
-                upsert scriptObject;
+                if(Sales_Rep_Script__c.sObjectType.getDescribe().isAccessible() ||
+                Sales_Rep_Script__c.sObjectType.getDescribe().isCreateable() ||
+                Sales_Rep_Script__c.sObjectType.getDescribe().isUpdateable()) {
+                    upsert scriptObject;
+                }
                 
             } else {
 
@@ -90,16 +93,16 @@ public with sharing class ScriptEditorController {
      */
     private void validatePersonalEdit() {
         List<ApexPages.Message> errs = new List<ApexPages.Message>();
-        if(scriptObject.Active__c != tempScript.Active__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));
-        if(scriptObject.Opportunity__c != tempScript.Opportunity__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));
-        if(scriptObject.OpportunityStage__c != tempScript.OpportunityStage__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));
-        if(scriptObject.OpportunityType__c != tempScript.OpportunityType__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));
-        if(scriptObject.scriptUser__c != tempScript.scriptUser__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));
-        if(scriptObject.UserRole__c != tempScript.UserRole__c) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));
-        if(scriptObject.Name != tempScript.Name) errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Name"'));
+        if(scriptObject.Active__c != tempScript.Active__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));}
+        if(scriptObject.Opportunity__c != tempScript.Opportunity__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));}
+        if(scriptObject.OpportunityStage__c != tempScript.OpportunityStage__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));}
+        if(scriptObject.OpportunityType__c != tempScript.OpportunityType__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));}
+        if(scriptObject.scriptUser__c != tempScript.scriptUser__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
+        if(scriptObject.UserRole__c != tempScript.UserRole__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
+        if(scriptObject.Name != tempScript.Name) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Name"'));}
 
         if(!errs.isEmpty()) {
-            for(ApexPages.Message m: errs) ApexPages.addMessage(m);
+            for(ApexPages.Message m: errs) {ApexPages.addMessage(m);}
             throw new ScriptValidationException('Script Validation failed. One or more fields are now allowed to be changed');
         }
     }
@@ -140,7 +143,10 @@ public with sharing class ScriptEditorController {
      * If the user tries to change anything that is not allowed to be changed, it will change back.
      */
     public Pagereference processUserChange() {
-        System.debug('Touched');
+        if(this.personalEdit) {
+            this.scriptObject.scriptUser__c = this.tempScript.scriptUser__c;
+            this.scriptObject.Opportunity__c = this.tempScript.Opportunity__c;
+        }
         return null;
     }
 
@@ -154,7 +160,6 @@ public with sharing class ScriptEditorController {
             String erMsg = e.getMessage();
             System.debug(erMsg);
             ApexPages.addMessages(e);
-            testResponse = erMsg;
             return erMsg;
         } catch(Exception e) {
             throw e;
@@ -189,13 +194,13 @@ public with sharing class ScriptEditorController {
     /**
      * Get field info from object and display it in the form.
      */
-    private void getFields() {
-        this.script = this.scriptObject.Script__c;
-        this.selectedStage = this.scriptObject.OpportunityStage__c;
-        this.selectedOppType = this.scriptObject.OpportunityType__c;
-        this.selectedUserRole = this.scriptObject.UserRole__c;
-        this.active = this.scriptObject.Active__c;
-    }
+    // private void getFields() {
+    //     this.script = this.scriptObject.Script__c;
+    //     this.selectedStage = this.scriptObject.OpportunityStage__c;
+    //     this.selectedOppType = this.scriptObject.OpportunityType__c;
+    //     this.selectedUserRole = this.scriptObject.UserRole__c;
+    //     this.active = this.scriptObject.Active__c;
+    // }
 
     private Sales_Rep_Script__c getScriptRecord(Id recordId) {
         return (recordId == null) ? new Sales_Rep_Script__c() : [SELECT Name, Script__c, OpportunityStage__c, OpportunityType__c, UserRole__c, scriptUser__c, Opportunity__c, Active__c FROM Sales_Rep_Script__c WHERE Id = :recordId];
@@ -225,7 +230,7 @@ public with sharing class ScriptEditorController {
     /**
      * Get list of allowed template tags from custom metadata.
      */
-    private void getTemplateTags() {
+    private void getTemplateTagsMDT() {
         List<String> tags = new List<String>();
         for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
             tags.add('{' + templateTagObj.Field_Name__c + '}');
@@ -244,6 +249,26 @@ public with sharing class ScriptEditorController {
 
     public Boolean getIsReadOnly() {
         return personalEdit;
+    }
+
+    public String getTemplateTags() {
+        return templateTags;
+    }
+
+    public Set<String> getTagsToAdd() {
+        return tagsToAdd;
+    }
+
+    public Set<String> getInvalidTags() {
+        return invalidTags;
+    }
+
+    public Boolean getDisplayModel() {
+        return displayModel;
+    }
+
+    public Sales_Rep_Script__c getScriptObject() {
+        return scriptObject;
     }
 
     /** Creates new metadata records for new script tags */

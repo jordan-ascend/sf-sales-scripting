@@ -23,7 +23,7 @@ public class ScriptEditorCtrl_Test {
         ctrl.scriptObject.OpportunityType__c = ctrl.getOppTypeList()[0].getValue();
         ctrl.scriptObject.UserRole__c = ctrl.getUserRoleList()[0].getValue();
         ctrl.scriptObject.scriptUser__c = u.Id;
-        ctrl.Active = true;
+        ctrl.scriptObject.Active__c = true;
         return ctrl;
     }
 
@@ -41,7 +41,7 @@ public class ScriptEditorCtrl_Test {
         System.debug(scriptObject.OpportunityType__c);
         System.debug(scriptObject.UserRole__c);
         System.debug(scriptObject.scriptUser__c);
-        System.assertEquals('Preamble to the Constitution', scriptObject.Name);
+        System.assertEquals('Preamble to the Constitution', scriptObject.Name, 'Script did not save correctly');
     }
 
     @isTest
@@ -60,8 +60,8 @@ public class ScriptEditorCtrl_Test {
         interpMsg = ScriptTemplateHandler.interpolateScript(scriptObject.Script__c, opp.Id);
         Test.stopTest();
 
-        System.assertEquals('Preamble to the Constitution', scriptObject.Name);
-        System.assertEquals('Opp name: Test Opp Account name: Test Acc', interpMsg);
+        System.assertEquals('Preamble to the Constitution', scriptObject.Name, 'Script did not save correctly');
+        System.assertEquals('Opp name: Test Opp Account name: Test Acc', interpMsg, 'Script was not interpolated correctly');
     }
 
     @isTest
@@ -79,14 +79,17 @@ public class ScriptEditorCtrl_Test {
         Integer scriptObjectCount = [SELECT Id FROM Sales_Rep_Script__c].size();
         Test.stopTest();
 
-        System.assertEquals(0, scriptObjectCount);
-        System.assert(ctrl.tagsToAdd.contains('{Opportunity.Description}'));
-        System.assertEquals(true, ctrl.displayModel);
-        System.assertEquals(true, ctrl.showToAddList);
+        Set<String> tagsToAdd = ctrl.getTagsToAdd();
+        Boolean displayModel = ctrl.getDisplayModel();
+
+        System.assertEquals(0, scriptObjectCount, 'A script was created when is should not have been.');
+        System.assert(tagsToAdd.contains('{Opportunity.Description}'), 'Invalid tag was not caught when save was attemped.');
+        System.assertEquals(true, displayModel, 'displayModel boolean should be true');
+        System.assertEquals(true, ctrl.showToAddList, 'showToAddList boolean should be true');
 
         ctrl.closeModal();
 
-        System.assert(ctrl.tagsToAdd.isEmpty());
+        System.assert(ctrl.tagsToAdd.isEmpty(), 'Script was not interpolated correctly');
     }
 
     @isTest
@@ -118,19 +121,23 @@ public class ScriptEditorCtrl_Test {
         Integer scriptObjectCount = [SELECT Id FROM Sales_Rep_Script__c].size();
         Test.stopTest();
 
-        System.assertEquals(0, scriptObjectCount);
-        System.assert(ctrl.invalidTags.contains('{Invalid.Description}'));
-        System.assert(ctrl.invalidTags.contains('{Opportunity.Invalid}'));
-        System.assert(ctrl.invalidTags.contains('{Opportunity.Description__r}'));
-        System.assert(ctrl.invalidTags.contains('{Opportunity.Account__c.Name}'));
-        System.assert(ctrl.invalidTags.contains('{Opportunity.Description.Too.Many}'));
-        System.assert(ctrl.invalidTags.contains('{Opportunity.Account.invalid}'));
-        System.assert(ctrl.invalidTags.contains('{Opportunity}'));
-        System.assertEquals(true, ctrl.displayModel);
+        Set<String> tagsToAdd = ctrl.getTagsToAdd();
+        Set<String> invalidTags = ctrl.getInvalidTags();
+        Boolean displayModel = ctrl.getDisplayModel();
+
+        System.assertEquals(0, scriptObjectCount, 'A script was created when is should not have been.');
+        System.assert(invalidTags.contains('{Invalid.Description}'), 'Interpolator did not catch a tag that is valid but not accepted');
+        System.assert(invalidTags.contains('{Opportunity.Invalid}'), 'Interpolator did not catch a tag with an invalid field');
+        System.assert(invalidTags.contains('{Opportunity.Description__r}'), 'Interpolator did not catch a tag with bad relationship syntax');
+        System.assert(invalidTags.contains('{Opportunity.Account__c.Name}'), 'Interpolator did not catch a tag with bad relationship syntax');
+        System.assert(invalidTags.contains('{Opportunity.Description.Too.Many}'), 'Interpolator did not catch a tag with to many changed relationship fields');
+        System.assert(invalidTags.contains('{Opportunity.Account.invalid}'), 'Interpolator did not catch a tag with invalid relationship field');
+        System.assert(invalidTags.contains('{Opportunity}'), 'Interpolator did not catch a tag with invalid relationship field');
+        System.assertEquals(true, displayModel, 'displayModel boolean should be true');
 
         ctrl.closeModal();
 
-        System.assert(ctrl.tagsToAdd.isEmpty());
+        System.assert(tagsToAdd.isEmpty(), 'Script was not interpolated correctly');
     }
 
     static String getScriptMessage() {

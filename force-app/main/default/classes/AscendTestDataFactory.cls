@@ -7,17 +7,19 @@ public class AscendTestDataFactory {
 
     public static Boolean autoCommit{
         get{
-            if(autoCommit == null) 
+            if(autoCommit == null) {
                 return true;
-            else
+            } else {
                 return autoCommit;
+            }
         }
         set{
-            if(autoCommit != null)
+            if(autoCommit != null) {
                 if(value && !autoCommit) {
                     autoCommit = true;
                     commitData();
                 }
+            }
             autoCommit = value;
         }
     }
@@ -25,12 +27,12 @@ public class AscendTestDataFactory {
     /**
      * Common data that my be dependencies of other SObjects
      */
-    public static void setupDefaultData() {
+    // public static void setupDefaultData() {
         // No common dependencies yet. If there is commonly required data to be set up across the org's test classes, put it here.
         // For example, if a trigger framework is implemented and custom settings are used to store trigger enabled/disabled 
         // states for accounts, then those settings would need to be recreated here since the likelihood of using accounts 
         // anywhere in in code is high.
-    }
+    // }
 
     /**
      * Create User
@@ -248,8 +250,9 @@ public class AscendTestDataFactory {
      * Example: Set website for list of Accounts. The map: {Account.Website => 'example.com'}
      */
     private static void assignFields(List<SObject> objs, Map<SObjectField,Object> fields) {
-        if(objs == null || fields == null)
+        if(objs == null || fields == null) {
             return;
+        }
         for(SObject o: objs) {
             for(SObjectField field: fields.keySet()) {
                 o.put(field.getDescribe().getName(), fields.get(field));

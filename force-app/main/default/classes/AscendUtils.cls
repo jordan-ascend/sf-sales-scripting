@@ -1,7 +1,7 @@
 /**
  * A class of common or potentially common methods that can be used throughout the org.
  */
-public class AscendUtils {
+public with sharing class AscendUtils {
     /**
      * Create a list of SelectOptions with a Map of labels to values.
      * 
@@ -15,9 +15,9 @@ public class AscendUtils {
      */
     public static List<SelectOption> createSelectOption(Map<String,String> optionMap, Boolean addAnyOption) {
         List<SelectOption> selectOptionList = new List<SelectOption>();
-        if(addAnyOption)
+        if(addAnyOption) {
             selectOptionList.add(new SelectOption('-- Any --', '-- Any --'));
-
+        }
         for(String label: optionMap.keySet()) {
             selectOptionList.add(new SelectOption(label, optionMap.get(label)));
         }
@@ -38,8 +38,9 @@ public class AscendUtils {
      */
     public static List<SelectOption> createSelectOption(List<String> optionList, Boolean addAnyOption) {
         Map<String,String> optionMap = new Map<String,String>();
-        for(String option: optionList)
+        for(String option: optionList) {
             optionMap.put(option, option);
+        }
         return createSelectOption(optionMap, addAnyOption);
     }
 
@@ -136,9 +137,13 @@ public class AscendUtils {
      */
     public static List<Object> slice(List<Object> inputList, Integer ge, Integer l) {
         List<Object> output = inputList.clone();
-        for (Integer i = 0; i < ge; i++) output.remove(0);
+        for (Integer i = 0; i < ge; i++) {
+            output.remove(0);
+        }
         Integer elements = l - ge;
-        while (output.size() > elements) output.remove(elements);
+        while (output.size() > elements) {
+            output.remove(elements);
+        }
         return output;
     }
 
@@ -156,8 +161,9 @@ public class AscendUtils {
         Pattern tokenMatch = Pattern.compile(regex);
         Matcher m = tokenMatch.matcher(inputString);
         List<String> exprList = new List<String>();
-        if(!m.find())
+        if(!m.find()) {
             return exprList;
+        }
         while (!m.hitEnd()) {
             exprList.add(m.group());
             m.find();
@@ -177,21 +183,31 @@ public class AscendUtils {
      * String that represents a set of items with the new item.
      */
     public static String addToDelimitedSet(String delimitedSet, String itemToAdd, String delimiter) {
-        if(String.isBlank(delimitedSet))
+        if(String.isBlank(delimitedSet)) {
             return itemToAdd;
+        }
         List<String> deserializedList = delimitedSet.split(delimiter);
         for(String item: deserializedList) {
-            if(item.endsWithIgnoreCase(itemToAdd))
+            if(item.endsWithIgnoreCase(itemToAdd)) {
                 return delimitedSet;
+            }
         }
         deserializedList.add(itemToAdd);
         return String.join(deserializedList, delimiter);
     }
 
     public static UserRole getUserRoleFromId(Id userRoleId) {
-        List<UserRole> roles = [SELECT Id, Name FROM UserRole WHERE Id = :userRoleId LIMIT 1];
-        if(roles.isEmpty())
+        List<UserRole> roles;
+        if(
+            UserRole.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.UserRole.fields.Id.isAccessible() &&
+            Schema.SObjectType.UserRole.fields.Name.isAccessible()
+        ) {
+            roles = [SELECT Id, Name FROM UserRole WHERE Id = :userRoleId LIMIT 1];
+        }
+        if(roles.isEmpty()) {
             return null;
+        }
         return roles[0];
     }
 
@@ -213,8 +229,9 @@ public class AscendUtils {
         } catch(Exception e) {
             return pickListMap;
         }
-        if(objToken == null)
+        if(objToken == null) {
             return pickListMap;
+        }
 
         DescribeSObjectResult objDef = objToken.getDescribe();
         Map<String, SObjectField> fields = objDef.fields.getMap(); 
@@ -225,8 +242,9 @@ public class AscendUtils {
         } catch(Exception e) {
             return pickListMap;
         }
-        if(field == null)
+        if(field == null) {
             return pickListMap;
+        }
 
         DescribeFieldResult fieldResult = field.getDescribe();
         List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();

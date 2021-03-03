@@ -95,13 +95,18 @@ public class ScriptEditorCtrl_Test {
     @isTest
     static void testSaveNewTags() {
         Test.startTest();
-        ScriptEditorController ctrl = getScriptCtrl();
-        ctrl.tagsToAdd.add('{TestTest.TestTest}');
-        ctrl.saveNewTags();
-        MetadataCallback m = new MetadataCallback();
-        Metadata.DeployResult dr = new Metadata.DeployResult();
-        Metadata.DeployCallbackContext dcc = new Metadata.DeployCallbackContext();
-        m.handleResult(dr, dcc);
+        try {
+            ScriptEditorController ctrl = getScriptCtrl();
+            ctrl.tagsToAdd.add('{TestTest.TestTest}');
+            ctrl.saveNewTags();
+            MetadataCallback m = new MetadataCallback();
+            Metadata.DeployResult dr = new Metadata.DeployResult();
+            Metadata.DeployCallbackContext dcc = new Metadata.DeployCallbackContext();
+            m.handleResult(dr, dcc);
+        } catch(Exception e) {
+            System.assert(false, e.getMessage());
+        }
+
         Test.stopTest();
         // Can't assert that custom metadata has been deployed.
     }

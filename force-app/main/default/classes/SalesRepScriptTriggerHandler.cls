@@ -1,4 +1,4 @@
-public class SalesRepScriptTriggerHandler {
+public with sharing class SalesRepScriptTriggerHandler {
     public static void beforeInsert(List<SObject> newObjs) {
         System.debug('Checkpoint 1');
         validateUniqueScript(newObjs, new List<Id>());
@@ -17,8 +17,15 @@ public class SalesRepScriptTriggerHandler {
      */
     public static List<Sales_Rep_Script__c> getScripts(List<String> scriptKeys, List<Id> scriptIds) {
         List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();
-        scripts = [SELECT Name, UniqueKey__c, Active__c FROM Sales_Rep_Script__c 
-        WHERE UniqueKey__c IN :scriptKeys AND Id NOT IN :scriptIds AND Active__c = true];
+        if(
+            Sales_Rep_Script__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.Name.isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.Active__c.isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.UniqueKey__c.isAccessible()
+        ) {
+            scripts = [SELECT Name, UniqueKey__c, Active__c FROM Sales_Rep_Script__c 
+            WHERE UniqueKey__c IN :scriptKeys AND Id NOT IN :scriptIds AND Active__c = true];
+        }
         return scripts;
     }
 

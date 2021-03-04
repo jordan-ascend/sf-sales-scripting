@@ -32,7 +32,7 @@ public class ScriptDisplayCtrl_Test {
         Opportunity opp = [SELECT StageName, Type FROM Opportunity];
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp);
         Test.stopTest();
 
         Script_Metric__c metric = [SELECT Opportunity_Stage__c, Opportunity_Won__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :opp.Id];
@@ -48,13 +48,13 @@ public class ScriptDisplayCtrl_Test {
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
         
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp);
         script1.scriptUser__c = UserInfo.getUserId();
         update script1;
-        ScriptDisplayController.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp);
         script1.scriptUser__c = null;
         update script1;
-        ScriptDisplayController.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp);
         Test.stopTest();
 
         Script_Metric__c metric = [SELECT Opportunity_Stage__c, Opportunity_Won__c, Scripts_Used__c, Related_User__c FROM Script_Metric__c 
@@ -72,7 +72,7 @@ public class ScriptDisplayCtrl_Test {
         Opportunity opp = [SELECT StageName, Type FROM Opportunity];
 
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp);
         Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
         Test.stopTest();
 
@@ -84,7 +84,7 @@ public class ScriptDisplayCtrl_Test {
         Opportunity opp = [SELECT StageName, Type FROM Opportunity];
 
         Test.startTest();
-        ScriptDisplayController.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp);
         opp.StageName = 'Qualification';
         update opp;
         Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);

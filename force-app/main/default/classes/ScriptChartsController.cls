@@ -1,11 +1,18 @@
 /**
  * Copied from example for ChartJs. Will modify for our use.
  */
-public class ScriptChartsController {
+public with sharing class ScriptChartsController {
     @AuraEnabled(cacheable=true)
     public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(Boolean capScripts){
-
-        List<Opporunity_Script_Junction__c> juncts = [SELECT Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c WHERE Opporunity_Won__c = true];
+        List<Opporunity_Script_Junction__c> juncts;
+        if(
+            Opporunity_Script_Junction__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Opporunity_Script_Junction__c.fields.Sales_Rep_Script__c.isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.Name.isAccessible() &&
+            Schema.SObjectType.Opporunity_Script_Junction__c.fields.Sales_Rep_Script__c.isAccessible()
+        ) {
+            juncts = [SELECT Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c WHERE Opporunity_Won__c = true];
+        }
         
         Map<String,ScriptChartsController.ScriptCount> junctionMap = new Map<String,ScriptChartsController.ScriptCount>();
         List<ScriptChartsController.ScriptCount> scriptCntObj = new List<ScriptChartsController.ScriptCount>();
@@ -40,7 +47,13 @@ public class ScriptChartsController {
     @AuraEnabled(cacheable=true)
     public static List<ScriptChartsController.AggregatedScriptCount> getAggregatedScripts(Boolean capScripts) {
         List<ScriptChartsController.AggregatedScriptCount> aggrScrCount = new List<ScriptChartsController.AggregatedScriptCount>();
-        List<AggregateResult> metricsAggregate = [SELECT Scripts_Used__c scriptsUsed, COUNT(Id)cnt FROM Script_Metric__c GROUP BY Scripts_Used__c ORDER BY COUNT(Id) DESC LIMIT 100];
+        List<AggregateResult> metricsAggregate;
+        if(
+            Script_Metric__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Script_Metric__c.fields.Scripts_Used__c.isAccessible()
+        ) {
+            metricsAggregate = [SELECT Scripts_Used__c scriptsUsed, COUNT(Id)cnt FROM Script_Metric__c GROUP BY Scripts_Used__c ORDER BY COUNT(Id) DESC LIMIT 100];
+        }
         Map<String,Integer> scriptsMap = new Map<String,Integer>();
 
         for (AggregateResult aggregate: metricsAggregate) {
@@ -56,10 +69,72 @@ public class ScriptChartsController {
             }
         }
 
-        List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();
-        scripts = [SELECT Name, Script__c, OpportunityStage__c FROM Sales_Rep_Script__c WHERE Id = :scriptIds];
+        // List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();
+        // if(
+        //     Sales_Rep_Script__c.SObjectType.getDescribe().isAccessible() &&
+        //     Schema.SObjectType.Sales_Rep_Script__c.fields.Name.isAccessible() &&
+        //     Schema.SObjectType.Sales_Rep_Script__c.fields.Script__c.isAccessible() &&
+        //     Schema.SObjectType.Sales_Rep_Script__c.fields.OpportunityStage__c.isAccessible()
+        // ) {
+        //     scripts = [SELECT Name, Script__c, OpportunityStage__c FROM Sales_Rep_Script__c WHERE Id = :scriptIds];
+        // }
+        // System.debug(scriptsMap.keySet());
+        // Integer increment = 1;
+        // for(String scriptListString: scriptsMap.keySet()) {
+        //     ScriptChartsController.AggregatedScriptCount count = new ScriptChartsController.AggregatedScriptCount();
 
+        //     count.count = scriptsMap.get(scriptListString);
+        //     count.groupName = 'Set ' + increment++;
+        //     count.namesAndUrls = new List<ScriptChartsController.NameAndURL>();
+
+        //     List<String> stageScriptPairs = scriptListString.split(';');
+        //     List<Id> scriptIdsHere = new List<Id>();
+        //     for(String pair: stageScriptPairs) {
+        //         List<String> pairSplit = pair.split(':');
+        //         scriptIdsHere.add(pairSplit[1]);
+        //     }
+
+        //     for(Id scriptId: scriptIdsHere) {
+        //         for(Sales_Rep_Script__c scr: scripts) {
+        //             if(scr.Id == scriptId) {
+        //                 ScriptChartsController.NameAndURL nameAndUrl = new ScriptChartsController.NameAndURL();
+        //                 nameAndUrl.name = scr.Name;
+        //                 nameAndUrl.url =  '/' + scr.Id;
+        //                 nameAndUrl.script = scr.Script__c;
+        //                 nameAndUrl.stage = scr.OpportunityStage__c;
+        //                 count.namesAndUrls.add(nameAndUrl);
+        //                 // count.names.add(scr.Name);
+        //                 // count.urls.add(URL.getSalesforceBaseUrl().toExternalForm() + '/' + scr.Id);
+        //             }
+        //         }
+        //     }
+        //     aggrScrCount.add(count);
+        // }
+        aggrScrCount = createAggrScrCount(scriptsMap, scriptIds);
+
+        aggrScrCount.sort();
+
+        if(capScripts) {
+            List<ScriptChartsController.AggregatedScriptCount> subset = (List<ScriptChartsController.AggregatedScriptCount>)AscendUtils.slice(aggrScrCount, 0, 10);
+            return subset;
+        } 
+
+        return aggrScrCount;
+    }
+
+    private static List<ScriptChartsController.AggregatedScriptCount> createAggrScrCount(Map<String,Integer> scriptsMap, Set<Id> scriptIds) {
+        List<ScriptChartsController.AggregatedScriptCount> aggrScrCount = new List<ScriptChartsController.AggregatedScriptCount>();
+        List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();
+        if(
+            Sales_Rep_Script__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.Name.isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.Script__c.isAccessible() &&
+            Schema.SObjectType.Sales_Rep_Script__c.fields.OpportunityStage__c.isAccessible()
+        ) {
+            scripts = [SELECT Name, Script__c, OpportunityStage__c FROM Sales_Rep_Script__c WHERE Id IN :scriptIds];
+        }
         System.debug(scriptsMap.keySet());
+
         Integer increment = 1;
         for(String scriptListString: scriptsMap.keySet()) {
             ScriptChartsController.AggregatedScriptCount count = new ScriptChartsController.AggregatedScriptCount();
@@ -84,20 +159,11 @@ public class ScriptChartsController {
                         nameAndUrl.script = scr.Script__c;
                         nameAndUrl.stage = scr.OpportunityStage__c;
                         count.namesAndUrls.add(nameAndUrl);
-                        // count.names.add(scr.Name);
-                        // count.urls.add(URL.getSalesforceBaseUrl().toExternalForm() + '/' + scr.Id);
                     }
                 }
             }
             aggrScrCount.add(count);
         }
-
-        aggrScrCount.sort();
-
-        if(capScripts) {
-            List<ScriptChartsController.AggregatedScriptCount> subset = (List<ScriptChartsController.AggregatedScriptCount>)AscendUtils.slice(aggrScrCount, 0, 10);
-            return subset;
-        } 
 
         return aggrScrCount;
     }
@@ -109,8 +175,8 @@ public class ScriptChartsController {
 
         public Integer compareTo(Object compareTo) {
             ScriptChartsController.ScriptCount scriptCntToComapre = (ScriptChartsController.ScriptCount)compareTo;
-            if (count == scriptCntToComapre.count) return 0;
-            if (count < scriptCntToComapre.count) return 1;
+            if (count == scriptCntToComapre.count) {return 0;}
+            if (count < scriptCntToComapre.count) {return 1;}
             return -1;
         }
     }
@@ -122,8 +188,8 @@ public class ScriptChartsController {
         
         public Integer compareTo(Object compareTo) {
             ScriptChartsController.AggregatedScriptCount scriptCntToComapre = (ScriptChartsController.AggregatedScriptCount)compareTo;
-            if (count == scriptCntToComapre.count) return 0;
-            if (count < scriptCntToComapre.count) return 1;
+            if (count == scriptCntToComapre.count) {return 0;}
+            if (count < scriptCntToComapre.count) {return 1;}
             return -1;
         }
     }

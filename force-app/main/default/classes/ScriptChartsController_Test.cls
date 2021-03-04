@@ -47,9 +47,9 @@ public class ScriptChartsController_Test {
             System.debug(c.name);
         }
 
-        System.assertEquals(3, count[0].count);
-        System.assertEquals(URL.getSalesforceBaseUrl().toExternalForm() + '/' + script.Id, count[0].url);
-        System.assertEquals(script.Id, count[0].name);
+        System.assertEquals(3, count[0].count, 'Should have three won opportunities for the script, but don\'t.');
+        System.assertEquals(URL.getSalesforceBaseUrl().toExternalForm() + '/' + script.Id, count[0].url, 'Did not return the correct URL or not at all. Should be url to script.');
+        System.assertEquals(script.Id, count[0].name, 'Didn\'t return correct script name. In this case, the ID is the name.');
     }
 
     @isTest
@@ -69,13 +69,13 @@ public class ScriptChartsController_Test {
                 System.debug(nu.url);
             }
         }
-        System.assertEquals(1, count[0].count);
-        System.assertEquals('Set 1', count[0].groupName);
-        System.assertEquals(scripts[0].name, count[0].namesAndUrls[0].name);
-        System.assertEquals('Prospecting', count[0].namesAndUrls[0].stage);
-        System.assert(count[0].namesAndUrls[0].url.contains(scripts[0].name));
-        System.assertEquals(scripts[1].name, count[0].namesAndUrls[1].name);
-        System.assertEquals('Qualification', count[0].namesAndUrls[1].stage);
-        System.assert(count[0].namesAndUrls[1].url.contains(scripts[1].name));
+        System.assertEquals(1, count[0].count, 'The set of scripts should have one won opportunity.');
+        System.assertEquals('Set 1', count[0].groupName, 'The group name for the set of scripts is not correct.');
+        System.assertEquals(scripts[0].name, count[0].namesAndUrls[0].name, 'The name of the first script is not correct.');
+        System.assertEquals('Prospecting', count[0].namesAndUrls[0].stage, 'The stage associated with the first script is not correct.');
+        System.assert(count[0].namesAndUrls[0].url.contains(scripts[0].name), 'The URL to the first script is not correct');
+        System.assertEquals(scripts[1].name, count[0].namesAndUrls[1].name, 'The name of the second script is not correct.');
+        System.assertEquals('Qualification', count[0].namesAndUrls[1].stage, 'The stage associated with the second script is not correct.');
+        System.assert(count[0].namesAndUrls[1].url.contains(scripts[1].name), 'The URL to the second script is not correct');
     }
 }

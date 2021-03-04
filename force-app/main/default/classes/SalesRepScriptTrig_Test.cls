@@ -16,8 +16,9 @@ public class SalesRepScriptTrig_Test {
                 Sales_Rep_Script__c.Opportunity__c => opp.Id,
                 Sales_Rep_Script__c.OpportunityType__c => 'New Customer'
             });
+            System.assert(false, 'Did not catch correct error. Error should have been thrown when two identical scripts were inserted.');
         } catch(Exception e) {
-            System.assert(e.getMessage().contains(errStrPartial));
+            System.assert(e.getMessage().contains(errStrPartial), 'Did not catch error. Error should have been thrown when two identical scripts were inserted.');
         }
     }
 

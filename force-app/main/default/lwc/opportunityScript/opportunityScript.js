@@ -1,6 +1,6 @@
 import { LightningElement, track, wire, api } from 'lwc';
 import getScript from '@salesforce/apex/ScriptDisplayController.getScript';
-import recordScriptUse from '@salesforce/apex/ScriptDisplayController.handleMetricObject';
+import recordScriptUse from '@salesforce/apex/MetricObjectHandler.handleMetricObject';
 import buttonEnabled from '@salesforce/apex/ScriptDisplayController.shouldButtonBeDisabled';
 import getOppStage from '@salesforce/apex/ScriptDisplayController.getOppStage';
 import { subscribe, unsubscribe, onError, setDebugFlag, isEmpEnabled }  from 'lightning/empApi';

@@ -279,7 +279,7 @@ public with sharing class ScriptEditorController {
         for(String tag: tagsToAdd) {
             System.debug(tag);
             List<String> exprComponents = tag.split('[\\{\\.\\}]');
-            exprComponents = ScriptTemplateHandler.removeBlanks(exprComponents);
+            exprComponents = ScriptTemplateHandlerHelper.removeBlanks(exprComponents);
             Metadata.CustomMetadata tagsMetadata = new Metadata.CustomMetadata();
             String label = exprComponents[1]+(exprComponents.size()==3?exprComponents[2]:'');
             tagsMetadata.fullName = 'Script_Template_Tag.'+label;

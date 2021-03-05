@@ -226,9 +226,10 @@ public with sharing class ScriptDisplayController {
         if(
             Script_Metric__c.SObjectType.getDescribe().isAccessible() &&
             Schema.SObjectType.Script_Metric__c.fields.Scripts_Used__c.isAccessible() &&
+            Schema.SObjectType.Script_Metric__c.fields.Opportunity__c.isAccessible() &&
             Schema.SObjectType.Script_Metric__c.fields.Related_User__c.isAccessible() 
         ) {
-            metrics = [SELECT Related_User__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :oppId];
+            metrics = [SELECT Related_User__c, Scripts_Used__c, Opportunity__c FROM Script_Metric__c WHERE Opportunity__c = :oppId];
         }
         Script_Metric__c metric;
         

@@ -5,34 +5,43 @@ public with sharing class MetricObjectHandler {
     @AuraEnabled
     public static void handleMetricObject(Opportunity opp) {
         System.debug('Running after update.');
-        
-        // Id userId = UserInfo.getUserId();
-        // String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
-        // userRoleName = userRoleName == null? '-- Any --' : userRoleName;
-
         ScriptHandler sh = new ScriptHandler(opp);
-        
-        // Opportunity opp = getOpportunity(oppId);
         
         List<Sales_Rep_Script__c> scripts = sh.getScriptObjects(opp.Type, opp.StageName);
         if(scripts.isEmpty()) {
             return;
         }
         Sales_Rep_Script__c script = ScriptDisplayController.getMostSpecific(scripts);
-        
-        Script_Metric__c metric = ScriptDisplayController.getMetricRecord(opp.Id);
+        System.debug(script.Name);
 
+        upsertMetric(opp, script);
+        upsertJunctionObject(opp, script);
+    } 
+
+    private static Script_Metric__c setCommonFieldAssignments(Script_Metric__c metric, Opportunity opp, Sales_Rep_Script__c script) {
         if(metric == null) {
             metric = new Script_Metric__c();
+        }
+        if(metric.Opportunity__c == null) {
             metric.Opportunity__c = opp.Id;
-            metric.Opportunity_Stage__c = opp.StageName;
-            metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
-            if(opp.StageName == 'Closed Won') {
-                metric.jgaude__Opportunity_Won__c = true;
-            }
-            else {
-                metric.jgaude__Opportunity_Won__c = false;
-            }
+        }
+        metric.Opportunity_Stage__c = opp.StageName;
+        metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
+        if(opp.StageName == 'Closed Won') {
+            metric.jgaude__Opportunity_Won__c = true;
+        }
+        else {
+            metric.jgaude__Opportunity_Won__c = false;
+        }
+        return metric;
+    } 
+
+    private static void upsertMetric(Opportunity opp, Sales_Rep_Script__c script) {
+        Script_Metric__c metric = ScriptDisplayController.getMetricRecord(opp.Id);
+
+        if(metric == null) { 
+
+            metric = setCommonFieldAssignments(metric, opp, script);
             if(script.scriptUser__c == UserInfo.getUserId()) {
                 metric.Related_User__c = script.scriptUser__c;
             }
@@ -41,34 +50,22 @@ public with sharing class MetricObjectHandler {
                 insert metric;
             }
         } else if(metric != null && metric.Related_User__c == null && script.scriptUser__c == UserInfo.getUserId()) {
-            Script_Metric__c newMetric = new Script_Metric__c();
-            newMetric.Opportunity__c = opp.Id;
-            newMetric.Opportunity_Stage__c = opp.StageName;
-            newMetric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
+
+            Script_Metric__c newMetric = setCommonFieldAssignments(null, opp, script);
             newMetric.Related_User__c = script.scriptUser__c;
-            if(opp.StageName == 'Closed Won') {
-                newMetric.jgaude__Opportunity_Won__c = true;
-            }
-            else {
-                newMetric.jgaude__Opportunity_Won__c = false;
-            }
             if(Script_Metric__c.sObjectType.getDescribe().isCreateable()) {
                 insert newMetric;
             }
         } else {
-            metric.Opportunity_Stage__c = opp.StageName;
-            metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
-            if(opp.StageName == 'Closed Won') {
-                metric.jgaude__Opportunity_Won__c = true;
-            }
-            else {
-                metric.jgaude__Opportunity_Won__c = false;
-            }
+
+            metric = setCommonFieldAssignments(metric, opp, script);
             if(Script_Metric__c.sObjectType.getDescribe().isUpdateable()) {
                 update metric;
             }
         }
+    }
 
+    private static void upsertJunctionObject(Opportunity opp, Sales_Rep_Script__c script) {
         Opporunity_Script_Junction__c junct = ScriptDisplayController.getJunctionRecord(opp.Id, script.Id);
         
         if(junct == null) {
@@ -95,7 +92,6 @@ public with sharing class MetricObjectHandler {
                 update junct;
             }
         }
-
     }
     
 }

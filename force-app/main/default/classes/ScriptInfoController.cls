@@ -1,11 +1,16 @@
-public class ScriptInfoController {
+public with sharing class ScriptInfoController {
     
     @AuraEnabled(cacheable=true)
     public static List<ScriptInfoController.CountObject> getScriptsWinsOverTime(Id scriptId){
         Integer monthsBack = 5;
-        List<Opporunity_Script_Junction__c> junctions = [SELECT Date_Won__c FROM Opporunity_Script_Junction__c WHERE Sales_Rep_Script__c = :scriptId];
-        System.debug(junctions);
-
+        List<Opporunity_Script_Junction__c> junctions;
+        if(
+            Opporunity_Script_Junction__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Opporunity_Script_Junction__c.fields.Date_Won__c.isAccessible()
+        ) {
+            junctions = [SELECT Date_Won__c FROM Opporunity_Script_Junction__c WHERE Sales_Rep_Script__c = :scriptId];
+            System.debug(junctions);
+        }
         List<ScriptInfoController.CountObject> counts = new List<ScriptInfoController.CountObject>();
 
         Datetime dt = Datetime.now();
@@ -24,8 +29,9 @@ public class ScriptInfoController {
 
 
             for(Opporunity_Script_Junction__c j: junctions) {
-                if(j.Date_Won__c == null)
+                if(j.Date_Won__c == null) {
                     continue;
+                }
                 Date d = j.Date_Won__c;
                 Datetime jdt = Datetime.newInstance(d.year(), d.month(), d.day());
 
@@ -33,7 +39,7 @@ public class ScriptInfoController {
                 System.debug(jdt);
                 System.debug(endDate);
 
-                if(jdt >= beginDate && jdt < endDate) c.count++;
+                if(jdt >= beginDate && jdt < endDate) {c.count++;}
             }
 
             counts.add(c);

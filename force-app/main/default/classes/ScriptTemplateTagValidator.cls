@@ -1,6 +1,9 @@
 public class ScriptTemplateTagValidator {
+    private static Map <String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
+    private static Map <String, Schema.SObjectField> fieldMap = Opportunity.getSObjectType().getDescribe().fields.getMap();
+
     public static Set<String> validateValidTags(Set<String> invalidTokens) {
-        Map <String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
+        // Map <String, Schema.SObjectType> schemaMap = Schema.getGlobalDescribe();
         Set<String> invalidTags = new Set<String>();
         for(String tag: invalidTokens) {
             List<String> exprComponents = tag.split('[\\{\\.\\}]');//oppForValidation
@@ -33,15 +36,7 @@ public class ScriptTemplateTagValidator {
                         invalidTags.add(tag);
                         continue;
                     } else {
-                        String oppField = exprComponents[1].replace('__r', '__c');
-                        Schema.SObjectField sOField = fieldMap.get(oppField);
-                        String relationshipName = sOField.getDescribe().getRelationshipName();
-
-                        Map <String, Schema.SObjectField> relationFieldMap = schemaMap.get(relationshipName).getDescribe().fields.getMap();
-                        List<String> relationFieldNames = new List<String>();
-                        for(SObjectField field: relationFieldMap.values()) {
-                            relationFieldNames.add(field.getDescribe().name);
-                        }
+                        List<String> relationFieldNames = addRelatioFieldNames(exprComponents[1].replace('__r', '__c'));
                         if(!relationFieldNames.contains(exprComponents[2])) {
                             invalidTags.add(tag);
                             continue;
@@ -54,5 +49,18 @@ public class ScriptTemplateTagValidator {
             }
         }
         return invalidTags;      
+    }
+
+    private static List<String> addRelatioFieldNames(String oppField) {
+        Schema.SObjectField sOField = fieldMap.get(oppField);
+        String relationshipName = sOField.getDescribe().getRelationshipName();
+
+        Map <String, Schema.SObjectField> relationFieldMap = schemaMap.get(relationshipName).getDescribe().fields.getMap();
+        List<String> relationFieldNames = new List<String>();
+        for(SObjectField field: relationFieldMap.values()) {
+            relationFieldNames.add(field.getDescribe().name);
+        }
+
+        return relationFieldNames;
     }
 }

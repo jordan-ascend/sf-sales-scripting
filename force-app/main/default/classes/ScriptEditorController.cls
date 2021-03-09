@@ -16,7 +16,7 @@ public with sharing class ScriptEditorController {
     private String templateTags {get;set;}
     @testVisible private Set<String> tagsToAdd {get;set;}
     private Set<String> invalidTags {get;set;}
-    // private Boolean active {get;set;}
+    public Boolean active {get;set;}
     private Boolean displayModel {get;set;}
     // private PageReference returnPage {get;set;}
     private Boolean personalEdit {get;set;}
@@ -38,32 +38,41 @@ public with sharing class ScriptEditorController {
         // getFields();
         this.userId = UserInfo.getUserId();
         getTemplateTagsMDT();
-        checkForScriptUserPermission();
         // returnPage = new PageReference(ApexPages.currentPage().getParameters().get('retURL'));  
         tagsToAdd = new Set<String>();
         invalidTags = new Set<String>();
         
         this.userFieldNotEditable = this.personalEdit;
         System.debug(getIsReadOnly());
+        if(scriptObject.Active__c == null) {
+            this.active = false;
+            this.scriptObject.Active__c = false;
+        }
+        else {
+            this.active = this.scriptObject.Active__c;
+        }
+        checkForScriptUserPermission();
         // this.active = scriptObject.Active__c == null? false:scriptObject.Active__c;
+        // this.scriptObject.Active__c = false;
     }
 
     public PageReference saveScript() {
         System.debug('Attempting Save...');
         try {
-            // scriptObject.Active__c = this.active;
             // System.debug('State of Active__c ' + this.active);
             String validationResult = validateTemplateTags(); 
 
             if(String.isBlank(validationResult)) {
-                if(personalEdit) {
+                if(this.personalEdit) {
                     validatePersonalEdit();
                 } 
+                this.scriptObject.Active__c = this.active;
                 if(Sales_Rep_Script__c.sObjectType.getDescribe().isAccessible() ||
                 Sales_Rep_Script__c.sObjectType.getDescribe().isCreateable() ||
                 Sales_Rep_Script__c.sObjectType.getDescribe().isUpdateable()) {
-                    upsert scriptObject;
+                    upsert this.scriptObject;
                 }
+                // ScriptEditorControllerHelper.saveScript(scriptObject);
                 
             } else {
 
@@ -93,13 +102,13 @@ public with sharing class ScriptEditorController {
      */
     private void validatePersonalEdit() {
         List<ApexPages.Message> errs = new List<ApexPages.Message>();
-        if(scriptObject.Active__c != tempScript.Active__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));}
-        if(scriptObject.Opportunity__c != tempScript.Opportunity__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));}
-        if(scriptObject.OpportunityStage__c != tempScript.OpportunityStage__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));}
-        if(scriptObject.OpportunityType__c != tempScript.OpportunityType__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));}
-        if(scriptObject.scriptUser__c != tempScript.scriptUser__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
-        if(scriptObject.UserRole__c != tempScript.UserRole__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
-        if(scriptObject.Name != tempScript.Name) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Name"'));}
+        if(this.active != this.tempScript.Active__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));}
+        if(this.scriptObject.Opportunity__c != this.tempScript.Opportunity__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));}
+        if(this.scriptObject.OpportunityStage__c != this.tempScript.OpportunityStage__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));}
+        if(this.scriptObject.OpportunityType__c != this.tempScript.OpportunityType__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));}
+        if(this.scriptObject.scriptUser__c != this.tempScript.scriptUser__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
+        if(this.scriptObject.UserRole__c != this.tempScript.UserRole__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
+        if(this.scriptObject.Name != this.tempScript.Name) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Name"'));}
 
         if(!errs.isEmpty()) {
             for(ApexPages.Message m: errs) {ApexPages.addMessage(m);}
@@ -124,7 +133,7 @@ public with sharing class ScriptEditorController {
                 this.scriptObject.Name = this.scriptObject.Name + ' [Personalized by ' + UserInfo.getName() + ']';
             }
             this.tempScript = new Sales_Rep_Script__c(
-                Active__c = this.scriptObject.Active__c,
+                Active__c = this.active,
                 Name = this.scriptObject.Name,
                 Opportunity__c = this.scriptObject.Opportunity__c,
                 OpportunityStage__c = this.scriptObject.OpportunityStage__c,
@@ -176,6 +185,10 @@ public with sharing class ScriptEditorController {
         taglists.addAll(tags.split(':::'));
         tagsToAdd = deserializeString(taglists[0]);
         invalidTags = deserializeString(taglists[1]);
+        if(this.personalEdit) {
+            invalidTags.addAll(tagsToAdd);
+            tagsToAdd.clear();
+        }
     }
 
     /**

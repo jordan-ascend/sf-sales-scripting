@@ -11,7 +11,9 @@
                     <lightning-button name="readButton" variant="brand" label="Mark As Read" title="Mark As Read" onclick={markRead} class="slds-m-left_x-small"></lightning-button>
                 </div> -->
                 <div>
-                    <lightning-button name="editButton" variant="brand" label="Edit" title="Edit" onclick={goToScriptRecord} ></lightning-button>
+                    <template if:true={showEditButton}>
+                        <lightning-button name="editButton" variant="brand" label="Edit" title="Edit" onclick={goToScriptRecord} ></lightning-button>
+                    </template>
                 </div>
             </template>
             <template if:false={scriptObject}>

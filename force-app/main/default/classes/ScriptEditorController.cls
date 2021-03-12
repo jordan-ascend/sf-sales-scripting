@@ -102,12 +102,12 @@ public with sharing class ScriptEditorController {
      */
     private void validatePersonalEdit() {
         List<ApexPages.Message> errs = new List<ApexPages.Message>();
-        if(this.active != this.tempScript.Active__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));}
-        if(this.scriptObject.Opportunity__c != this.tempScript.Opportunity__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));}
-        if(this.scriptObject.OpportunityStage__c != this.tempScript.OpportunityStage__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));}
-        if(this.scriptObject.OpportunityType__c != this.tempScript.OpportunityType__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));}
+        // if(this.active != this.tempScript.Active__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Active"'));}
+        // if(this.scriptObject.Opportunity__c != this.tempScript.Opportunity__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity"'));}
+        // if(this.scriptObject.OpportunityStage__c != this.tempScript.OpportunityStage__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Stage"'));}
+        // if(this.scriptObject.OpportunityType__c != this.tempScript.OpportunityType__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Opportunity Type"'));}
         if(this.scriptObject.scriptUser__c != this.tempScript.scriptUser__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
-        if(this.scriptObject.UserRole__c != this.tempScript.UserRole__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
+        // if(this.scriptObject.UserRole__c != this.tempScript.UserRole__c) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "User"'));}
         if(this.scriptObject.Name != this.tempScript.Name) {errs.add(new ApexPages.Message(Apexpages.Severity.ERROR, 'Cannot modify "Name"'));}
 
         if(!errs.isEmpty()) {

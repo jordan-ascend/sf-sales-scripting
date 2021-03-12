@@ -8,7 +8,7 @@ public with sharing class ScriptDisplayController {
      */
     @AuraEnabled(cacheable=true)
     public static Map<String,jgaude__Sales_Rep_Script__c> getScript(Id oppId) {
-        Id userId = UserInfo.getUserId();
+        // Id userId = UserInfo.getUserId();
         String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
         userRoleName = userRoleName == null? '-- Any --' : userRoleName;
         Opportunity opp = getOpportunity(oppId);
@@ -33,34 +33,6 @@ public with sharing class ScriptDisplayController {
         // return scriptToDeliver;
         System.debug(scriptsMap);
         return scriptsMap;
-    }
-
-    /**
-     * Looks at the metric object to see if this script has already been read (the 'read' button has been clicked). If so, 
-     * then grey out the button.
-     */
-    @AuraEnabled//(cacheable=true)
-    public static boolean shouldButtonBeDisabled(Id oppId) {
-        System.debug('Checking if button should be disabled...');
-        Id userId = UserInfo.getUserId();
-        String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
-        userRoleName = userRoleName == null? '-- Any --' : userRoleName;
-
-        Script_Metric__c metric = getMetricRecord(oppId);
-        if(metric == null || metric.Scripts_Used__c == null) {
-            return false;
-        }
-        Opportunity opp = getOpportunity(oppId);
-
-        ScriptHandler sh = new ScriptHandler(opp);
-        List<Sales_Rep_Script__c> scripts = sh.getScriptObjects(opp.Type, opp.StageName);
-        if(scripts.isEmpty()) {
-            return true;
-        }
-        Sales_Rep_Script__c script = getMostSpecific(scripts);
-        System.debug(metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id));
-        System.debug(opp.StageName + ':' + script.Id);
-        return metric.Scripts_Used__c.contains(opp.StageName + ':' + script.Id);
     }
 
     // @AuraEnabled(cacheable=true)
@@ -244,5 +216,19 @@ public with sharing class ScriptDisplayController {
         }
 
         return metric;
+    }
+
+    /**
+     * Need to know if a script user or admin is accessing this page. That affrects if the user can see the edit button.
+     */
+    @AuraEnabled
+    public static Boolean scriptUserCanEdit() {
+        Integer i = [SELECT Id FROM PermissionSetAssignment
+                     WHERE AssigneeId = :UserInfo.getUserId() AND (PermissionSet.Name = 'Script_User' OR PermissionSet.Name = 'Script_Admin')].size();
+
+        if(i > 0) {
+            return true;
+        } 
+        return false;
     }
 }

@@ -50,6 +50,7 @@ force-app/main/default/classes/ModelSuper.cls
 force-app/main/default/classes/ModelSuper.cls-meta.xml
 force-app/main/default/classes/ModelUse.cls
 force-app/main/default/classes/ModelUse.cls-meta.xml
+force-app/main/default/classes/FiwizeAPI*
 
 #Objects
 force-app/main/default/objects/Opportunity

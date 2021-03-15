@@ -124,7 +124,7 @@ public with sharing class ScriptEditorController {
         Integer i = [SELECT Id FROM PermissionSetAssignment
                      WHERE AssigneeId = :this.userId AND PermissionSet.Name = 'Script_User'].size();
 
-        if(i == 1) {
+        if(i > 0) {
             this.personalEdit = true;
             
             if(this.scriptObject.scriptUser__c == null || this.scriptObject.scriptUser__c != this.userId) {
@@ -146,6 +146,18 @@ public with sharing class ScriptEditorController {
         }
 
         System.debug(this.personalEdit);
+    }
+
+    private Boolean isScriptAdmin() {
+        System.debug(this.userId);
+        Integer i = [SELECT Id FROM PermissionSetAssignment
+                     WHERE AssigneeId = :this.userId AND PermissionSet.Name = 'Script_Admin'].size();
+
+        if(i > 0) {
+            return true;
+        } 
+
+        return false;
     }
 
     /**
@@ -309,7 +321,7 @@ public with sharing class ScriptEditorController {
         }
 
         MetadataCallback mdCallBack = new MetadataCallback();
-        if(!Test.isRunningTest()) {
+        if(!Test.isRunningTest() && isScriptAdmin()) {
             Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, mdCallBack);
             System.debug('Script Editor Tag Metadata Deployment. Job Id: ' + jobId);
         }

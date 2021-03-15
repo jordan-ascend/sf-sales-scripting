@@ -3,7 +3,11 @@
  */
 public with sharing class ScriptChartsController {
     @AuraEnabled(cacheable=true)
-    public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(Boolean capScripts){
+    public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(Boolean capScripts) {
+        return getScriptsThatWin(capScripts, null);
+    }
+
+    public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(Boolean capScripts, String keyword){
         List<Opporunity_Script_Junction__c> juncts;
         if(
             Opporunity_Script_Junction__c.SObjectType.getDescribe().isAccessible() &&
@@ -11,7 +15,11 @@ public with sharing class ScriptChartsController {
             Schema.SObjectType.Sales_Rep_Script__c.fields.Name.isAccessible() &&
             Schema.SObjectType.Opporunity_Script_Junction__c.fields.Sales_Rep_Script__c.isAccessible()
         ) {
-            juncts = [SELECT Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c WHERE Opporunity_Won__c = true];
+            if(String.isNotBlank(keyword)) {
+                juncts = [SELECT Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c WHERE Opporunity_Won__c = true AND Sales_Rep_Script__r.Name LIKE :('%'+keyword+'%')];
+            } else {
+                juncts = [SELECT Sales_Rep_Script__r.Name, Sales_Rep_Script__c FROM Opporunity_Script_Junction__c WHERE Opporunity_Won__c = true];
+            }
         }
         
         Map<String,ScriptChartsController.ScriptCount> junctionMap = new Map<String,ScriptChartsController.ScriptCount>();
@@ -45,6 +53,37 @@ public with sharing class ScriptChartsController {
     }
 
     @AuraEnabled(cacheable=true)
+    public static List<ScriptChartsController.ScriptCount> getScriptsThatWinForTable(Integer pageNumber, Integer recordsPerPage, String keyword) {
+        List<ScriptChartsController.ScriptCount> counts = getScriptsThatWin(false, keyword);
+
+        if(counts.isEmpty()) {
+            return counts;
+        }
+
+        // if(counts.size() <= recordsPerPage) {
+        //     return counts;
+        // }
+        
+        Integer numberOfPages = counts.size() / recordsPerPage;
+        if(Math.mod(counts.size(), recordsPerPage) != 0) {
+            numberOfPages++;
+        }
+
+        Integer stopIndex = recordsPerPage * pageNumber;
+        Integer startIndex = stopIndex - recordsPerPage;
+        stopIndex = stopIndex > counts.size() ? counts.size() : stopIndex;
+
+        List<ScriptChartsController.ScriptCount> newCounts = (List<ScriptChartsController.ScriptCount>)AscendUtils.slice(counts, startIndex, stopIndex);
+
+        for(ScriptChartsController.ScriptCount c: newCounts) {
+            c.totalPages = numberOfPages;
+            c.totalRecords = counts.size();
+        }
+        
+        return newCounts;
+    }
+
+    @AuraEnabled(cacheable=true)
     public static List<ScriptChartsController.AggregatedScriptCount> getAggregatedScripts(Boolean capScripts) {
         List<ScriptChartsController.AggregatedScriptCount> aggrScrCount = new List<ScriptChartsController.AggregatedScriptCount>();
         List<AggregateResult> metricsAggregate;
@@ -68,48 +107,6 @@ public with sharing class ScriptChartsController {
                 scriptIds.add(pairSplit[1]);
             }
         }
-
-        // List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();
-        // if(
-        //     Sales_Rep_Script__c.SObjectType.getDescribe().isAccessible() &&
-        //     Schema.SObjectType.Sales_Rep_Script__c.fields.Name.isAccessible() &&
-        //     Schema.SObjectType.Sales_Rep_Script__c.fields.Script__c.isAccessible() &&
-        //     Schema.SObjectType.Sales_Rep_Script__c.fields.OpportunityStage__c.isAccessible()
-        // ) {
-        //     scripts = [SELECT Name, Script__c, OpportunityStage__c FROM Sales_Rep_Script__c WHERE Id = :scriptIds];
-        // }
-        // System.debug(scriptsMap.keySet());
-        // Integer increment = 1;
-        // for(String scriptListString: scriptsMap.keySet()) {
-        //     ScriptChartsController.AggregatedScriptCount count = new ScriptChartsController.AggregatedScriptCount();
-
-        //     count.count = scriptsMap.get(scriptListString);
-        //     count.groupName = 'Set ' + increment++;
-        //     count.namesAndUrls = new List<ScriptChartsController.NameAndURL>();
-
-        //     List<String> stageScriptPairs = scriptListString.split(';');
-        //     List<Id> scriptIdsHere = new List<Id>();
-        //     for(String pair: stageScriptPairs) {
-        //         List<String> pairSplit = pair.split(':');
-        //         scriptIdsHere.add(pairSplit[1]);
-        //     }
-
-        //     for(Id scriptId: scriptIdsHere) {
-        //         for(Sales_Rep_Script__c scr: scripts) {
-        //             if(scr.Id == scriptId) {
-        //                 ScriptChartsController.NameAndURL nameAndUrl = new ScriptChartsController.NameAndURL();
-        //                 nameAndUrl.name = scr.Name;
-        //                 nameAndUrl.url =  '/' + scr.Id;
-        //                 nameAndUrl.script = scr.Script__c;
-        //                 nameAndUrl.stage = scr.OpportunityStage__c;
-        //                 count.namesAndUrls.add(nameAndUrl);
-        //                 // count.names.add(scr.Name);
-        //                 // count.urls.add(URL.getSalesforceBaseUrl().toExternalForm() + '/' + scr.Id);
-        //             }
-        //         }
-        //     }
-        //     aggrScrCount.add(count);
-        // }
         aggrScrCount = createAggrScrCount(scriptsMap, scriptIds);
 
         aggrScrCount.sort();
@@ -172,6 +169,8 @@ public with sharing class ScriptChartsController {
         @AuraEnabled public String name;
         @AuraEnabled public Integer count;
         @AuraEnabled public String url;
+        @auraEnabled public Integer totalPages;
+        @auraEnabled public Integer totalRecords;
 
         public Integer compareTo(Object compareTo) {
             ScriptChartsController.ScriptCount scriptCntToComapre = (ScriptChartsController.ScriptCount)compareTo;

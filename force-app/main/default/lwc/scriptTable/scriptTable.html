@@ -1,9 +1,47 @@
 <template>
-    <lightning-datatable
-        key-field="Id"
-        data={scriptsInfo.data}
-        columns={columns}
-        hide-checkbox-column
-        show-row-number-column>
-    </lightning-datatable>
+    <div class="slds-box" style="background-color: white;">
+        <div class="table-inputs slds-grid slds-gutters slds-m-bottom_small">
+            <lightning-combobox
+                class="combobox slds-col slds-size_1-of-4"
+                name="Number of Records"
+                label="Show"
+                value={recordsPerPage}
+                placeholder={recordsPerPage}
+                options={comboBoxOptions}
+                onchange={handleCombooxChange}>
+            </lightning-combobox>
+            <lightning-input 
+                class="searchbar slds-col slds-size_3-of-4"
+                label="Search"
+                value={keyword}
+                onchange={handleKeyWordChange}>
+            </lightning-input>
+        </div>
+        <lightning-datatable
+            key-field="Id"
+            data={scriptsInfo}
+            columns={columns}
+            hide-checkbox-column
+            show-row-number-column>
+        </lightning-datatable>
+        <div class="nav-buttons slds-m-vertical_small">
+            <template if:false={isFirstPage}>
+                <lightning-button
+                    class="slds-m-right_small"
+                    label="Previous"
+                    onclick={handlePrevPage}>
+                </lightning-button>
+            </template>
+            <template if:false={isLastPage}>
+                <lightning-button
+                    label="Next"
+                    onclick={handleNextPage}>
+                </lightning-button>    
+            </template>
+        </div>
+        <div class="slds-m-top_small">
+            Total Records: {totalRecordCount} <br>
+            Page ({pageNumber} of {totalPageCount})
+        </div>
+    </div>
 </template>

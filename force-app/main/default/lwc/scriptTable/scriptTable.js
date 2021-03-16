@@ -1,11 +1,13 @@
 import { LightningElement, wire } from 'lwc';
 import getScriptsInfo from '@salesforce/apex/ScriptChartsController.getScriptsThatWinForTable';
-const columns = [
+
+const SEARCH_DELAY = 500;
+const COLUMNS = [
     { label: 'No. Opportunities Won', fieldName: 'count', type: 'number' },
     { label: 'Script Name', fieldName: 'name', type: 'text' },
     { label: 'Script Record Page', fieldName: 'url', type: 'url' }
 ];
-const comboBoxOptions = [
+const COMBO_BOX_OPTIONS = [
     { label: '10', value: 10},
     { label: '25', value: 25},
     { label: '50', value: 50}
@@ -14,7 +16,7 @@ const comboBoxOptions = [
 export default class ScriptTable extends LightningElement {
     scriptsInfo;
     error;
-    columns = columns;
+    columns = COLUMNS;
     pageNumber;
     keyword;
     sortedField;
@@ -25,8 +27,9 @@ export default class ScriptTable extends LightningElement {
     isLastPage;
     totalRecordCount;
     totalPageCount;
+    timeoutId;
 
-    @wire(getScriptsInfo, {pageNumber: 1, recordsPerPage: comboBoxOptions[0].value, keyword: null})
+    @wire(getScriptsInfo, {pageNumber: 1, recordsPerPage: COMBO_BOX_OPTIONS[0].value, keyword: null})
     initialPageSetup({error, data}) {
         if (data) {
             this.scriptsInfo = data;
@@ -46,17 +49,19 @@ export default class ScriptTable extends LightningElement {
 
     connectedCallback() {
         this.pageNumber = 1;
-        this.recordsPerPage = comboBoxOptions[0].value;
+        this.recordsPerPage = COMBO_BOX_OPTIONS[0].value;
     }
 
     get comboBoxOptions() {
-        return comboBoxOptions;
+        return COMBO_BOX_OPTIONS;
     }
 
     handleKeyWordChange(event) {
         this.pageNumber = 1;
         this.keyword = event.target.value;
-        this.handlePageChange();
+        // Waits for user to stop typing.
+        clearTimeout(this.timeoutId);
+        this.timeoutId = setTimeout(this.handlePageChange.bind(this), SEARCH_DELAY);
     }
 
     handleSort(event) {

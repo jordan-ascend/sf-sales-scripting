@@ -7,6 +7,13 @@ public with sharing class ScriptChartsController {
         return getScriptsThatWin(capScripts, null);
     }
 
+    /**
+     * Get stats for how many opportunities with each script. 
+     * 
+     * Parameters:
+     * Boolean capScripts - Caps the number of ScriptChartsController.ScriptCount to top 10.
+     * String keyword - Optional - Used to get metrics for scripts with names that contain keyword.
+     */
     public static List<ScriptChartsController.ScriptCount> getScriptsThatWin(Boolean capScripts, String keyword){
         List<Opporunity_Script_Junction__c> juncts;
         if(
@@ -52,6 +59,14 @@ public with sharing class ScriptChartsController {
         return scriptCntObj;
     }
 
+    /**
+     * Gets stats for a specific page of a paginated table based on how many records are on the page.
+     * 
+     * Parameters:
+     * Integer pageNumber - The page to get records for.
+     * Integer recordsPerPage - The number of records viewable on a page. Accounts for if number of records does not fill page.
+     * String keyword - Optional - Used to get metrics for scripts with names that contain keyword.
+     */
     @AuraEnabled(cacheable=true)
     public static List<ScriptChartsController.ScriptCount> getScriptsThatWinForTable(Integer pageNumber, Integer recordsPerPage, String keyword) {
         List<ScriptChartsController.ScriptCount> counts = getScriptsThatWin(false, keyword);
@@ -59,10 +74,6 @@ public with sharing class ScriptChartsController {
         if(counts.isEmpty()) {
             return counts;
         }
-
-        // if(counts.size() <= recordsPerPage) {
-        //     return counts;
-        // }
         
         Integer numberOfPages = counts.size() / recordsPerPage;
         if(Math.mod(counts.size(), recordsPerPage) != 0) {
@@ -83,6 +94,13 @@ public with sharing class ScriptChartsController {
         return newCounts;
     }
 
+    /**
+     * Gets stats for combinations of scripts that lead to an opportunity being won. I.e. Scripts A, B, and C for stages 
+     * prospecting, qualification, and proposal where used in ten opportunities that went on to be won.
+     * 
+     * Parameters:
+     * Boolean capScripts - Caps the number of ScriptChartsController.ScriptCount to top 10.
+     */
     @AuraEnabled(cacheable=true)
     public static List<ScriptChartsController.AggregatedScriptCount> getAggregatedScripts(Boolean capScripts) {
         List<ScriptChartsController.AggregatedScriptCount> aggrScrCount = new List<ScriptChartsController.AggregatedScriptCount>();
@@ -119,6 +137,9 @@ public with sharing class ScriptChartsController {
         return aggrScrCount;
     }
 
+    /**
+     * creates List<ScriptChartsController.AggregatedScriptCount> for getAggregatedScripts().
+     */
     private static List<ScriptChartsController.AggregatedScriptCount> createAggrScrCount(Map<String,Integer> scriptsMap, Set<Id> scriptIds) {
         List<ScriptChartsController.AggregatedScriptCount> aggrScrCount = new List<ScriptChartsController.AggregatedScriptCount>();
         List<Sales_Rep_Script__c> scripts = new List<Sales_Rep_Script__c>();

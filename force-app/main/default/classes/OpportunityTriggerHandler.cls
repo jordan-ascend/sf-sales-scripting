@@ -21,8 +21,9 @@ public with sharing class OpportunityTriggerHandler {
         firePlatformEvents(oldOpps, newOpps);
     }
 
+    @testVisible private static List<Opportunity_Listen__e> events = new List<Opportunity_Listen__e>();
     private static void firePlatformEvents(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
-        List<SObject> events = new List<SObject>();
+        events.clear();
 
         for(Id oppId: oldOpps.keySet()) {
             if(oldOpps.get(oppId).get('StageName') != newOpps.get(oppId).get('StageName')) {

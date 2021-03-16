@@ -70,40 +70,40 @@ public class ScriptDisplayCtrl_Test {
         System.assertEquals(2, [SELECT Opportunity_Stage__c, Opportunity_Won__c, Scripts_Used__c, Related_User__c FROM Script_Metric__c].size(), 'Two metric objects should have been created.');
     }
 
-    @isTest
-    static void testShouldButtonBeDisabled() {
-        Opportunity opp = [SELECT StageName, Type FROM Opportunity];
+    // @isTest
+    // static void testShouldButtonBeDisabled() {
+    //     Opportunity opp = [SELECT StageName, Type FROM Opportunity];
 
-        Test.startTest();
-        MetricObjectHandler.handleMetricObject(opp);
-        Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
-        Test.stopTest();
+    //     Test.startTest();
+    //     MetricObjectHandler.handleMetricObject(opp);
+    //     Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
+    //     Test.stopTest();
 
-        System.assert(btnDisabled, 'Button should be disabled, but isn\'t.');
-    }
+    //     System.assert(btnDisabled, 'Button should be disabled, but isn\'t.');
+    // }
 
-    @isTest
-    static void testShouldButtonBeDisabledNoScript() {
-        Opportunity opp = [SELECT StageName, Type FROM Opportunity];
+    // @isTest
+    // static void testShouldButtonBeDisabledNoScript() {
+    //     Opportunity opp = [SELECT StageName, Type FROM Opportunity];
 
-        Test.startTest();
-        MetricObjectHandler.handleMetricObject(opp);
-        opp.StageName = 'Qualification';
-        update opp;
-        Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
-        Test.stopTest();
+    //     Test.startTest();
+    //     MetricObjectHandler.handleMetricObject(opp);
+    //     opp.StageName = 'Qualification';
+    //     update opp;
+    //     Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
+    //     Test.stopTest();
 
-        System.assert(btnDisabled, 'Button should be disabled, but isn\'t.');
-    }
+    //     System.assert(btnDisabled, 'Button should be disabled, but isn\'t.');
+    // }
 
-    @isTest
-    static void testShouldButtonBeDisabledFalse() {
-        Opportunity opp = [SELECT StageName FROM Opportunity];
+    // @isTest
+    // static void testShouldButtonBeDisabledFalse() {
+    //     Opportunity opp = [SELECT StageName FROM Opportunity];
 
-        Test.startTest();
-        Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
-        Test.stopTest();
+    //     Test.startTest();
+    //     Boolean btnDisabled = ScriptDisplayController.shouldButtonBeDisabled(opp.Id);
+    //     Test.stopTest();
 
-        System.assertEquals(false, btnDisabled, 'Button shouldn\'t be disabled, but is.');
-    }
+    //     System.assertEquals(false, btnDisabled, 'Button shouldn\'t be disabled, but is.');
+    // }
 }

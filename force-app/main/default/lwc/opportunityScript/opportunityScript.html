@@ -19,6 +19,9 @@
         <p class="slds-box slds-theme_shade slds-m-vertical_large">No script is prepared for this opportunity stage.</p>
     </template>
     <template if:true={error}>
-        <P>{error.data}</P>
+        <div class="slds-box slds-theme_shade slds-m-vertical_large">
+            <p>An Error was encountered.</p><br>
+            <P>{error.data}</P>
+        </div>
     </template>
 </template>

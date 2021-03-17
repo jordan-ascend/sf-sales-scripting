@@ -109,7 +109,7 @@ public with sharing class ScriptChartsController {
             Script_Metric__c.SObjectType.getDescribe().isAccessible() &&
             Schema.SObjectType.Script_Metric__c.fields.Scripts_Used__c.isAccessible()
         ) {
-            metricsAggregate = [SELECT Scripts_Used__c scriptsUsed, COUNT(Id)cnt FROM Script_Metric__c GROUP BY Scripts_Used__c ORDER BY COUNT(Id) DESC LIMIT 100];
+            metricsAggregate = [SELECT Scripts_Used__c scriptsUsed, COUNT(Id)cnt FROM Script_Metric__c WHERE Opportunity_Won__c = true GROUP BY Scripts_Used__c ORDER BY COUNT(Id) DESC LIMIT 100];
         }
         Map<String,Integer> scriptsMap = new Map<String,Integer>();
 

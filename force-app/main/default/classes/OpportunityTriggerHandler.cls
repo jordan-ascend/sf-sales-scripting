@@ -27,7 +27,7 @@ public with sharing class OpportunityTriggerHandler {
 
         for(Id oppId: oldOpps.keySet()) {
             if(oldOpps.get(oppId).get('StageName') != newOpps.get(oppId).get('StageName')) {
-                MetricObjectHandler.handleMetricObject((Opportunity)oldOpps.get(oppId));
+                MetricObjectHandler.handleMetricObject((Opportunity)newOpps.get(oppId));
 
                 Opportunity_Listen__e ol = new Opportunity_Listen__e(
                     Message__c = 'Stage updated.',

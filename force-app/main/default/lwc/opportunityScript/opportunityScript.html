@@ -7,22 +7,18 @@
                     value={scriptObject.jgaude__Script__c}
                     ></lightning-formatted-rich-text>
                 </div>
-                <!-- <div class="slds-m-vertical_xx-small">
-                    <lightning-button name="readButton" variant="brand" label="Mark As Read" title="Mark As Read" onclick={markRead} class="slds-m-left_x-small"></lightning-button>
-                </div> -->
                 <div>
                     <template if:true={showEditButton}>
                         <lightning-button name="editButton" variant="brand" label="Edit" title="Edit" onclick={goToScriptRecord} ></lightning-button>
                     </template>
                 </div>
             </template>
-            <template if:false={scriptObject}>
-                <p>No script is prepared for this opportunity stage.</p>
-            </template>
-            <template if:true={error}>
-                <P>{error.data}</P>
-            </template>
         </lightning-card>
-        
+    </template>
+    <template if:false={scriptObject}>
+        <p class="slds-box slds-theme_shade slds-m-vertical_large">No script is prepared for this opportunity stage.</p>
+    </template>
+    <template if:true={error}>
+        <P>{error.data}</P>
     </template>
 </template>

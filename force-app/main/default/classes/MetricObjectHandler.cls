@@ -3,7 +3,7 @@ public with sharing class MetricObjectHandler {
      * Handle creation or update of a Script_Metric__c record that will keep track of the scripts used for an opportunity
      */
     @AuraEnabled
-    public static void handleMetricObject(Opportunity opp) {
+    public static void handleMetricObject(Opportunity opp, Opportunity newOpp) {
         System.debug('Running after update.');
         ScriptHandler sh = new ScriptHandler(opp);
         
@@ -14,20 +14,20 @@ public with sharing class MetricObjectHandler {
         Sales_Rep_Script__c script = ScriptDisplayController.getMostSpecific(scripts);
         System.debug(script.Name);
 
-        upsertMetric(opp, script);
-        upsertJunctionObject(opp, script);
+        upsertMetric(opp, newOpp, script);
+        upsertJunctionObject(opp, newOpp, script);
     } 
 
-    private static Script_Metric__c setCommonFieldAssignments(Script_Metric__c metric, Opportunity opp, Sales_Rep_Script__c script) {
+    private static Script_Metric__c setCommonFieldAssignments(Script_Metric__c metric, Opportunity opp, Opportunity newOpp, Sales_Rep_Script__c script) {
         if(metric == null) {
             metric = new Script_Metric__c();
         }
         if(metric.Opportunity__c == null) {
             metric.Opportunity__c = opp.Id;
         }
-        metric.Opportunity_Stage__c = opp.StageName;
+        metric.Opportunity_Stage__c = newOpp.StageName;
         metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
-        if(opp.StageName == 'Closed Won') {
+        if(newOpp.StageName == 'Closed Won') {
             metric.jgaude__Opportunity_Won__c = true;
         }
         else {
@@ -36,12 +36,12 @@ public with sharing class MetricObjectHandler {
         return metric;
     } 
 
-    private static void upsertMetric(Opportunity opp, Sales_Rep_Script__c script) {
+    private static void upsertMetric(Opportunity opp, Opportunity newOpp, Sales_Rep_Script__c script) {
         Script_Metric__c metric = ScriptDisplayController.getMetricRecord(opp.Id);
 
         if(metric == null) { 
 
-            metric = setCommonFieldAssignments(metric, opp, script);
+            metric = setCommonFieldAssignments(metric, opp, newOpp, script);
             if(script.scriptUser__c == UserInfo.getUserId()) {
                 metric.Related_User__c = script.scriptUser__c;
             }
@@ -51,21 +51,20 @@ public with sharing class MetricObjectHandler {
             }
         } else if(metric != null && metric.Related_User__c == null && script.scriptUser__c == UserInfo.getUserId()) {
 
-            Script_Metric__c newMetric = setCommonFieldAssignments(null, opp, script);
+            Script_Metric__c newMetric = setCommonFieldAssignments(null, opp, newOpp, script);
             newMetric.Related_User__c = script.scriptUser__c;
             if(Script_Metric__c.sObjectType.getDescribe().isCreateable()) {
                 insert newMetric;
             }
         } else {
-
-            metric = setCommonFieldAssignments(metric, opp, script);
+            metric = setCommonFieldAssignments(metric, opp, newOpp, script);
             if(Script_Metric__c.sObjectType.getDescribe().isUpdateable()) {
                 update metric;
             }
         }
     }
 
-    private static void upsertJunctionObject(Opportunity opp, Sales_Rep_Script__c script) {
+    private static void upsertJunctionObject(Opportunity opp, Opportunity newOpp, Sales_Rep_Script__c script) {
         Opporunity_Script_Junction__c junct = ScriptDisplayController.getJunctionRecord(opp.Id, script.Id);
         
         if(junct == null) {
@@ -87,6 +86,10 @@ public with sharing class MetricObjectHandler {
             }
         }
         else {
+            Date d = Date.today();
+            if(opp.StageName != 'Closed Won' && newOpp.StageName == 'Closed Won') {
+                junct.Date_Won__c = d;
+            }
             junct.Opporunity_Stage__c = opp.StageName;
             if(Opporunity_Script_Junction__c.sObjectType.getDescribe().isUpdateable()) {
                 update junct;

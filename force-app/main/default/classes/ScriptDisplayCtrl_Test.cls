@@ -34,7 +34,7 @@ public class ScriptDisplayCtrl_Test {
         Opportunity opp = [SELECT StageName, Type FROM Opportunity];
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
         Test.startTest();
-        MetricObjectHandler.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp, opp);
         Test.stopTest();
 
         Script_Metric__c metric = [SELECT Opportunity_Stage__c, Opportunity_Won__c, Scripts_Used__c FROM Script_Metric__c WHERE Opportunity__c = :opp.Id];
@@ -50,11 +50,11 @@ public class ScriptDisplayCtrl_Test {
         Sales_Rep_Script__c script1 = [SELECT Id FROM Sales_Rep_Script__c WHERE Opportunity__c = :opp.Id];
         
         Test.startTest();
-        MetricObjectHandler.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp, opp);
         script1.scriptUser__c = UserInfo.getUserId();
         update script1;
-        MetricObjectHandler.handleMetricObject(opp);
-        MetricObjectHandler.handleMetricObject(opp);
+        MetricObjectHandler.handleMetricObject(opp, opp);
+        MetricObjectHandler.handleMetricObject(opp, opp);
         Test.stopTest();
         
         System.debug('Opp Id: ' + opp.Id);

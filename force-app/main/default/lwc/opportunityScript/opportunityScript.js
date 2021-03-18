@@ -1,6 +1,6 @@
 import { LightningElement, track, wire, api } from 'lwc';
 import getScript from '@salesforce/apex/ScriptDisplayController.getScript';
-import recordScriptUse from '@salesforce/apex/MetricObjectHandler.handleMetricObject';
+// import recordScriptUse from '@salesforce/apex/MetricObjectHandler.handleMetricObject';
 // import buttonEnabled from '@salesforce/apex/ScriptDisplayController.shouldButtonBeDisabled';
 import editVisible from '@salesforce/apex/ScriptDisplayController.scriptUserCanEdit';
 import getOppStage from '@salesforce/apex/ScriptDisplayController.getOppStage';
@@ -8,7 +8,6 @@ import { subscribe, unsubscribe, onError, setDebugFlag, isEmpEnabled }  from 'li
 // import getNewScript from '@salesforce/apex/ScriptDisplayController.getNewScript';
 import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
-import MailingPostalCode from '@salesforce/schema/Contact.MailingPostalCode';
 
 export default class OpportunityScript extends NavigationMixin(LightningElement) {
 

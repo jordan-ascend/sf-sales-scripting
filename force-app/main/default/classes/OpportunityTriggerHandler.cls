@@ -53,58 +53,58 @@ public with sharing class OpportunityTriggerHandler {
         
     }
 
-    // private static void updateMetricObject(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
-    //     System.debug(newOpps.keyset());
-    //     System.debug(oldOpps.keyset());
-    //     List<Script_Metric__c> metrics;
-    //     if(
-    //         Script_Metric__c.SObjectType.getDescribe().isAccessible() &&
-    //         Schema.SObjectType.Script_Metric__c.fields.Opportunity__c.isAccessible() &&
-    //         Schema.SObjectType.Script_Metric__c.fields.Opportunity_Won__c.isAccessible()
-    //     ) {
-    //         metrics = [SELECT Opportunity__c, Opportunity_Won__c FROM Script_Metric__c WHERE Opportunity__c IN :newOpps.keyset()];
-    //     }
-    //     System.debug(metrics);
-    //     for(Script_Metric__c metric: metrics) {
-    //         Opportunity opp = (Opportunity)newOpps.get(metric.Opportunity__c);
-    //         if(opp == null) {
-    //             continue;
-    //         }
-    //         if(opp.StageName == 'Closed Won') {
-    //             metric.Opportunity_Won__c = true;
-    //         } else {
-    //             metric.Opportunity_Won__c = false;
-    //         }
-    //     }
-    //     if(Script_Metric__c.sObjectType.getDescribe().isUpdateable()) {
-    //         update metrics;
-    //     }
-    // }
+    private static void updateMetricObject(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
+        System.debug(newOpps.keyset());
+        System.debug(oldOpps.keyset());
+        List<Script_Metric__c> metrics;
+        if(
+            Script_Metric__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Script_Metric__c.fields.Opportunity__c.isAccessible() &&
+            Schema.SObjectType.Script_Metric__c.fields.Opportunity_Won__c.isAccessible()
+        ) {
+            metrics = [SELECT Opportunity__c, Opportunity_Won__c FROM Script_Metric__c WHERE Opportunity__c IN :newOpps.keyset()];
+        }
+        System.debug(metrics);
+        for(Script_Metric__c metric: metrics) {
+            Opportunity opp = (Opportunity)newOpps.get(metric.Opportunity__c);
+            if(opp == null) {
+                continue;
+            }
+            if(opp.StageName == 'Closed Won') {
+                metric.Opportunity_Won__c = true;
+            } else {
+                metric.Opportunity_Won__c = false;
+            }
+        }
+        if(Script_Metric__c.sObjectType.getDescribe().isUpdateable()) {
+            update metrics;
+        }
+    }
 
-    // private static void updateScriptJunctionObject(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
-    //     List<Id> oppIds = new List<Id>();
-    //     oppIds.addAll(oldOpps.keySet());
-    //     Date d = Date.today();
-    //     List<Opporunity_Script_Junction__c> junctions;
-    //     if(
-    //         Opporunity_Script_Junction__c.SObjectType.getDescribe().isAccessible() &&
-    //         Schema.SObjectType.Opporunity_Script_Junction__c.fields.Opportunity__c.isAccessible()
-    //     ) {
-    //         junctions = [SELECT Opportunity__c FROM Opporunity_Script_Junction__c WHERE Opportunity__c IN :oppIds];
-    //     }
+    private static void updateScriptJunctionObject(Map<Id,SObject> oldOpps, Map<Id,SObject> newOpps) {
+        List<Id> oppIds = new List<Id>();
+        oppIds.addAll(oldOpps.keySet());
+        Date d = Date.today();
+        List<Opporunity_Script_Junction__c> junctions;
+        if(
+            Opporunity_Script_Junction__c.SObjectType.getDescribe().isAccessible() &&
+            Schema.SObjectType.Opporunity_Script_Junction__c.fields.Opportunity__c.isAccessible()
+        ) {
+            junctions = [SELECT Opportunity__c FROM Opporunity_Script_Junction__c WHERE Opportunity__c IN :oppIds];
+        }
         
-    //     for(Opporunity_Script_Junction__c j: junctions) {
-    //         System.debug(j.Id);
-    //         System.debug(j.Opportunity__c);
-    //         System.debug(oldOpps.get(j.Opportunity__c).get('StageName'));
-    //         System.debug(newOpps.get(j.Opportunity__c).get('StageName'));
-    //         if(oldOpps.get(j.Opportunity__c).get('StageName') != 'Closed Won' && newOpps.get(j.Opportunity__c).get('StageName') == 'Closed Won') {
-    //             System.debug('updating date won');
-    //             j.Date_Won__c = d;
-    //         }
-    //     }
-    //     if(Opporunity_Script_Junction__c.sObjectType.getDescribe().isUpdateable()) {
-    //         update junctions;
-    //     }
-    // }
+        for(Opporunity_Script_Junction__c j: junctions) {
+            System.debug(j.Id);
+            System.debug(j.Opportunity__c);
+            System.debug(oldOpps.get(j.Opportunity__c).get('StageName'));
+            System.debug(newOpps.get(j.Opportunity__c).get('StageName'));
+            if(oldOpps.get(j.Opportunity__c).get('StageName') != 'Closed Won' && newOpps.get(j.Opportunity__c).get('StageName') == 'Closed Won') {
+                System.debug('updating date won');
+                j.Date_Won__c = d;
+            }
+        }
+        if(Opporunity_Script_Junction__c.sObjectType.getDescribe().isUpdateable()) {
+            update junctions;
+        }
+    }
 }

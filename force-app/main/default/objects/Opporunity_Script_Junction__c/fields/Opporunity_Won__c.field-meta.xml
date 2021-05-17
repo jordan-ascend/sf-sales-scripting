@@ -5,7 +5,6 @@
     <formula>Opportunity__r.IsWon</formula>
     <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
     <label>Opporunity Won</label>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

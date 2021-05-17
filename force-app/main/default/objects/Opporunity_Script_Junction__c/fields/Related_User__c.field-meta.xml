@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Related_User__c</fullName>
+    <externalId>false</externalId>
+    <formula>Sales_Rep_Script__r.scriptUser__r.LastName+
+IF(ISBLANK(Sales_Rep_Script__r.scriptUser__r.FirstName),
+  &quot;&quot;,
+  &quot;, &quot;+Sales_Rep_Script__r.scriptUser__r.FirstName
+)</formula>
+    <label>Related User</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -7,7 +7,7 @@ public with sharing class ScriptDisplayController {
      * Retreives script for opportunity.
      */
     @AuraEnabled(cacheable=true)
-    public static Map<String,jgaude__Sales_Rep_Script__c> getScript(Id oppId) {
+    public static Map<String,Sales_Rep_Script__c> getScript(Id oppId) {
         // Id userId = UserInfo.getUserId();
         String userRoleName = AscendUtils.getUserRoleFromId(UserInfo.getUserRoleId())?.Name;
         userRoleName = userRoleName == null? '-- Any --' : userRoleName;

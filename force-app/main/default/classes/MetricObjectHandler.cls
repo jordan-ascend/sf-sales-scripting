@@ -28,10 +28,10 @@ public with sharing class MetricObjectHandler {
         metric.Opportunity_Stage__c = newOpp.StageName;
         metric.Scripts_Used__c = AscendUtils.addToDelimitedSet(metric.Scripts_Used__c, opp.StageName + ':' + script.Id, ';');
         if(newOpp.StageName == 'Closed Won') {
-            metric.jgaude__Opportunity_Won__c = true;
+            metric.Opportunity_Won__c = true;
         }
         else {
-            metric.jgaude__Opportunity_Won__c = false;
+            metric.Opportunity_Won__c = false;
         }
         return metric;
     } 

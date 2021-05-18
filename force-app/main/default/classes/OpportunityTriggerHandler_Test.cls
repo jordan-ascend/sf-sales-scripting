@@ -4,6 +4,9 @@ public class OpportunityTriggerHandler_Test {
     @TestSetup
     static void makeData(){
         Sales_Rep_Script__c script = AscendTestDataFactory.createScript(null);
+        Sales_Rep_Script__c script2 = AscendTestDataFactory.createScript(new Map<SObjectField,Object>{
+            Sales_Rep_Script__c.OpportunityStage__c => 'Qualification'
+        });
         Opportunity opp = AscendTestDataFactory.createOpportunity(null);
         Script_Metric__c metric = new Script_Metric__c(
             Opportunity__c = opp.Id,
@@ -15,6 +18,11 @@ public class OpportunityTriggerHandler_Test {
             Sales_Rep_Script__c = script.Id,
             Opporunity_Stage__c = 'Prospecting'
         );
+        //Opporunity_Script_Junction__c junct2 = new Opporunity_Script_Junction__c(
+        //    Opportunity__c = opp.Id,
+        //    Sales_Rep_Script__c = script.Id,
+        //    Opporunity_Stage__c = 'Closed Won'
+        //);
         insert new List<SObject>{metric, junct};
     }
 
@@ -70,7 +78,7 @@ public class OpportunityTriggerHandler_Test {
         update opp;
         Test.stopTest();
 
-        junct = [SELECT Date_Won__c, Opporunity_Won__c FROM Opporunity_Script_Junction__c LIMIT 1];
+        junct = [SELECT Date_Won__c, Opporunity_Won__c FROM Opporunity_Script_Junction__c][1];
         System.assertEquals(true, junct.Opporunity_Won__c, 'The junction should record true for Opporunity_Won__c');
         System.assertEquals(Date.today(), junct.Date_Won__c, 'A date should only be set when the opportunity is won.');
     }

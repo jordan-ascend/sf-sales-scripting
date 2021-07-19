@@ -6,19 +6,23 @@ public class SalesRepScriptTrig_Test {
      */
     @isTest
     static void testDuplicateScript() {
-        Opportunity opp = AscendTestDataFactory.createOpportunity(null);
-        try{
-            Sales_Rep_Script__c script1 = AscendTestDataFactory.createScript(new Map<SObjectField,Object>{
-                Sales_Rep_Script__c.Opportunity__c => opp.Id,
-                Sales_Rep_Script__c.OpportunityType__c => 'New Customer'
-            });
-            Sales_Rep_Script__c script2 = AscendTestDataFactory.createScript(new Map<SObjectField,Object>{
-                Sales_Rep_Script__c.Opportunity__c => opp.Id,
-                Sales_Rep_Script__c.OpportunityType__c => 'New Customer'
-            });
-            System.assert(false, 'Did not catch correct error. Error should have been thrown when two identical scripts were inserted.');
-        } catch(Exception e) {
-            System.assert(e.getMessage().contains(errStrPartial), 'Did not catch error. Error should have been thrown when two identical scripts were inserted.');
+        User u = [SELECT Name FROM User WHERE Profile.Name = 'System Administrator' LIMIT 1];
+        AscendTestDataFactory.assignPermissionSets(new Set<User>{u}, new Set<String>{'Script_Admin', 'Script_User'});
+        System.runAs(u) {
+            Opportunity opp = AscendTestDataFactory.createOpportunity(null);
+            try{
+                Sales_Rep_Script__c script1 = AscendTestDataFactory.createScript(new Map<SObjectField,Object>{
+                    Sales_Rep_Script__c.Opportunity__c => opp.Id,
+                    Sales_Rep_Script__c.OpportunityType__c => 'New Customer'
+                });
+                Sales_Rep_Script__c script2 = AscendTestDataFactory.createScript(new Map<SObjectField,Object>{
+                    Sales_Rep_Script__c.Opportunity__c => opp.Id,
+                    Sales_Rep_Script__c.OpportunityType__c => 'New Customer'
+                });
+                System.assert(false, 'Did not catch correct error. Error should have been thrown when two identical scripts were inserted.');
+            } catch(Exception e) {
+                System.assert(e.getMessage().contains(errStrPartial), 'Did not catch error. Error should have been thrown when two identical scripts were inserted.');
+            }
         }
     }
 

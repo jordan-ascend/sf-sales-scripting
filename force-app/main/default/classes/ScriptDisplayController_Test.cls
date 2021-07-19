@@ -26,13 +26,17 @@ public class ScriptDisplayController_Test {
     
     @isTest
     static void getScript() {
-        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        User u = [SELECT Name FROM User WHERE Profile.Name = 'System Administrator' LIMIT 1];
+        AscendTestDataFactory.assignPermissionSets(new Set<User>{u}, new Set<String>{'Script_Admin', 'Script_User'});
+        System.runAs(u) {
+            Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
 
-        Test.startTest();
-        Map<String,Sales_Rep_Script__c> scriptMap = ScriptDisplayController.getScript(opp.Id);
-        Test.stopTest();
+            Test.startTest();
+            Map<String,Sales_Rep_Script__c> scriptMap = ScriptDisplayController.getScript(opp.Id);
+            Test.stopTest();
 
-        System.assertEquals('Script 1', scriptMap.get('Prospecting').Name, 'Script 1 should have been selected but was not.');
+            System.assertEquals('Script 1', scriptMap.get('Prospecting').Name, 'Script 1 should have been selected but was not.');
+        }
     }
 
     @isTest

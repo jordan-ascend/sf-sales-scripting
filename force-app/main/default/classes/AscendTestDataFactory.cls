@@ -53,6 +53,29 @@ public class AscendTestDataFactory {
      * UserName='testUser[randomStringOfNumners]@testorg.com'
      */
     public static User createUser(Map<SObjectField,Object> fields) {
+        return createUser(null, fields);
+    }
+
+    /**
+     * Create User and assign Permission Set
+     * Parameters:
+     * permissionSetNames - Set of Strings that are the names of permissions sets to assign to user. autoCommit must be true or permission sets will not be assigned.
+     * fields - Map of SObjectField to Object to set fields
+     * Returns:
+     * An User Object
+     * 
+     * Field Defaults:
+     * Alias = '[randomStringOfNumners]'
+     * Email='testUser[randomStringOfNumners]@testorg.com'
+     * EmailEncodingKey='UTF-8'
+     * LastName='testUser[randomStringOfNumners]'
+     * LanguageLocaleKey='en_US'
+     * LocaleSidKey='en_US'
+     * ProfileId = [Id of Standard User]
+     * TimeZoneSidKey='America/Los_Angeles'
+     * UserName='testUser[randomStringOfNumners]@testorg.com'
+     */
+    public static User createUser(Set<String> permissionSetNames, Map<SObjectField,Object> fields) {
         Profile p = [SELECT Id FROM Profile WHERE Name='Standard User']; 
         String numString = AscendUtils.randomNumberString(5);
         User u = new User(Alias = numString, Email='testUser'+numString+'@testorg.com', 
@@ -63,7 +86,38 @@ public class AscendTestDataFactory {
         assignFields(objs, fields);
         recordsToCommit.addAll(objs);
         commitData();
+        if(permissionSetNames != null && !permissionSetNames.isEmpty() && autoCommit) {
+            assignPermissionSets(new Set<User>{u}, permissionSetNames);
+        }
         return u;
+    }
+
+    /**
+     * Assign permission sets to users.
+     * Parameters:
+     * users - A set of users that have Ids.
+     * permissionSetNames - Set of Strings that are the names of permissions sets to assign to users.
+     * Returns:
+     * A map of user to permission set assignment.
+     */
+    public static Map<User,Set<PermissionSetAssignment>> assignPermissionSets(Set<User> users, Set<String> permissionSetNames) {
+        Map<User,Set<PermissionSetAssignment>> permissionSetAssignments = new Map<User,Set<PermissionSetAssignment>>();
+        List<PermissionSetAssignment> allAssignments = new List<PermissionSetAssignment>();
+        List<PermissionSet> sets = [SELECT Name FROM PermissionSet WHERE Name IN :permissionSetNames];
+        System.debug('assignPermissionSets:::Permission sets: ' + sets);
+
+        for(User u: users) {
+            System.debug('assignPermissionSets:::UserName: ' + u.Name);
+            Set<PermissionSetAssignment> userPermissionSetAssignments = new Set<PermissionSetAssignment>();
+            for(PermissionSet pSet: sets) {
+                System.debug('assignPermissionSets:::Assigning ' + pSet.Name + ' to ' + u.Name);
+                userPermissionSetAssignments.add(new PermissionSetAssignment(AssigneeId = u.id, PermissionSetId = pSet.Id));
+            }
+            permissionSetAssignments.put(u, userPermissionSetAssignments);
+            allAssignments.addAll(userPermissionSetAssignments);
+        }
+        insert allAssignments;
+        return permissionSetAssignments;
     }
 
     /**

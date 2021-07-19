@@ -59,29 +59,33 @@ public class ScriptChartsController_Test {
 
     @isTest
     static void testGetAggregatedScripts() {
-        List<Sales_Rep_Script__c> scripts = [SELECT Name FROM Sales_Rep_Script__c];
+        User u = [SELECT Name FROM User WHERE Profile.Name = 'System Administrator' LIMIT 1];
+        AscendTestDataFactory.assignPermissionSets(new Set<User>{u}, new Set<String>{'Script_Admin', 'Script_User'});
+        System.runAs(u) {
+            List<Sales_Rep_Script__c> scripts = [SELECT Name FROM Sales_Rep_Script__c];
 
-        Test.startTest();
-        List<ScriptChartsController.AggregatedScriptCount> count = ScriptChartsController.getAggregatedScripts(true);
-        Test.stopTest();
+            Test.startTest();
+            List<ScriptChartsController.AggregatedScriptCount> count = ScriptChartsController.getAggregatedScripts(true);
+            Test.stopTest();
 
-        for(ScriptChartsController.AggregatedScriptCount c: count) {
-            System.debug(c.count);
-            System.debug(c.groupName);
-            for(ScriptChartsController.NameAndURL nu: c.namesAndUrls) {
-                System.debug(nu.name);
-                System.debug(nu.stage);
-                System.debug(nu.url);
+            for(ScriptChartsController.AggregatedScriptCount c: count) {
+                System.debug(c.count);
+                System.debug(c.groupName);
+                for(ScriptChartsController.NameAndURL nu: c.namesAndUrls) {
+                    System.debug(nu.name);
+                    System.debug(nu.stage);
+                    System.debug(nu.url);
+                }
             }
+            System.assertEquals(1, count[0].count, 'The set of scripts should have one won opportunity.');
+            System.assertEquals('Set 1', count[0].groupName, 'The group name for the set of scripts is not correct.');
+            System.assertEquals(scripts[0].name, count[0].namesAndUrls[0].name, 'The name of the first script is not correct.');
+            System.assertEquals('Prospecting', count[0].namesAndUrls[0].stage, 'The stage associated with the first script is not correct.');
+            System.assert(count[0].namesAndUrls[0].url.contains(scripts[0].Id), 'The URL to the first script is not correct');
+            System.assertEquals(scripts[1].name, count[0].namesAndUrls[1].name, 'The name of the second script is not correct.');
+            System.assertEquals('Qualification', count[0].namesAndUrls[1].stage, 'The stage associated with the second script is not correct.');
+            System.assert(count[0].namesAndUrls[1].url.contains(scripts[1].Id), 'The URL to the second script is not correct');
         }
-        System.assertEquals(1, count[0].count, 'The set of scripts should have one won opportunity.');
-        System.assertEquals('Set 1', count[0].groupName, 'The group name for the set of scripts is not correct.');
-        System.assertEquals(scripts[0].name, count[0].namesAndUrls[0].name, 'The name of the first script is not correct.');
-        System.assertEquals('Prospecting', count[0].namesAndUrls[0].stage, 'The stage associated with the first script is not correct.');
-        System.assert(count[0].namesAndUrls[0].url.contains(scripts[0].Id), 'The URL to the first script is not correct');
-        System.assertEquals(scripts[1].name, count[0].namesAndUrls[1].name, 'The name of the second script is not correct.');
-        System.assertEquals('Qualification', count[0].namesAndUrls[1].stage, 'The stage associated with the second script is not correct.');
-        System.assert(count[0].namesAndUrls[1].url.contains(scripts[1].Id), 'The URL to the second script is not correct');
     }
 
     @isTest

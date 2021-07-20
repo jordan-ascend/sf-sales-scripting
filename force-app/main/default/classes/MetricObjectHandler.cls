@@ -8,7 +8,7 @@ public with sharing class MetricObjectHandler {
         ScriptHandler sh = new ScriptHandler(opp);
         
         List<Sales_Rep_Script__c> scripts = sh.getScriptObjects(opp.Type, opp.StageName);
-        if(scripts.isEmpty()) {
+        if(scripts == null || scripts.isEmpty()) {
             return;
         }
         Sales_Rep_Script__c script = ScriptDisplayController.getMostSpecific(scripts);

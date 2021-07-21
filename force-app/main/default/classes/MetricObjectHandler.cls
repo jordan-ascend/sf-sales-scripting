@@ -69,7 +69,7 @@ public with sharing class MetricObjectHandler {
         
         if(junct == null) {
             junct = new Opporunity_Script_Junction__c();
-            junct.Date_Won__c = getCloseWonDate(opp.StageName, newOpp.StageName);
+            junct.Date_Won__c = getCloseWonDate(opp.StageName, newOpp.StageName, opp.Id);
             junct.Opporunity_Stage__c = opp.StageName;
             junct.Opportunity__c = opp.Id;
             junct.Sales_Rep_Script__c = script.Id;
@@ -79,7 +79,7 @@ public with sharing class MetricObjectHandler {
         }
         else if(junct != null && junct.Related_User_Id__c == null && script.scriptUser__c == UserInfo.getUserId()) {
             junct = new Opporunity_Script_Junction__c();
-            junct.Date_Won__c = getCloseWonDate(opp.StageName, newOpp.StageName);
+            junct.Date_Won__c = getCloseWonDate(opp.StageName, newOpp.StageName, opp.Id);
             junct.Opporunity_Stage__c = opp.StageName;
             junct.Opportunity__c = opp.Id;
             junct.Sales_Rep_Script__c = script.Id;
@@ -92,7 +92,7 @@ public with sharing class MetricObjectHandler {
             // if(opp.StageName != 'Closed Won' && newOpp.StageName == 'Closed Won') {
             //     junct.Date_Won__c = d;
             // }
-            junct.Date_Won__c = getCloseWonDate(opp.StageName, newOpp.StageName);
+            junct.Date_Won__c = getCloseWonDate(opp.StageName, newOpp.StageName, opp.Id);
             junct.Opporunity_Stage__c = opp.StageName;
             if(Opporunity_Script_Junction__c.sObjectType.getDescribe().isUpdateable()) {
                 update junct;
@@ -100,9 +100,17 @@ public with sharing class MetricObjectHandler {
         }
     }
 
-    private static Date getCloseWonDate(String stageName, String newStageName) {
+    private static Date getCloseWonDate(String stageName, String newStageName, Id oppId) {
         if(stageName != 'Closed Won' && newStageName == 'Closed Won') {
-            return Date.today();
+            Date d = Date.today();
+            // If the opportunity is won, then we need to update all junction records related to opp to have to update their Date_Won__c.
+            List<Opporunity_Script_Junction__c> junctList = [SELECT Id FROM Opporunity_Script_Junction__c WHERE Opportunity__c = :oppId];
+            for(Opporunity_Script_Junction__c junct: junctList) {
+                junct.Date_Won__c = d;
+            }
+            update junctList;
+
+            return d;
         }
         return null;
     } 

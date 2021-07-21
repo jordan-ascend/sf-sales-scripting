@@ -116,7 +116,8 @@ public class AscendTestDataFactory {
             permissionSetAssignments.put(u, userPermissionSetAssignments);
             allAssignments.addAll(userPermissionSetAssignments);
         }
-        insert allAssignments;
+        // insert allAssignments;
+        Database.insert(allAssignments, false);
         return permissionSetAssignments;
     }
 

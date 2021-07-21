@@ -30,7 +30,8 @@ public with sharing class ScriptHandler {
                 WHERE /*OpportunityStage__c = :stage AND*/ (scriptUser__c = :this.userId OR scriptUser__c = null)
                 AND (Opportunity__c =: this.opp.Id OR Opportunity__c = null)
                 AND (UserRole__c = :this.userRoleName OR UserRole__c = '-- Any --')
-                AND (OpportunityType__c = :oppType OR OpportunityType__c = '-- Any --')];
+                AND (OpportunityType__c = :oppType OR OpportunityType__c = '-- Any --')
+                AND Active__c = true];
         }
         return scripts;
     }
@@ -52,7 +53,8 @@ public with sharing class ScriptHandler {
                 WHERE OpportunityStage__c = :stage AND (scriptUser__c = :this.userId OR scriptUser__c = null)
                 AND (Opportunity__c =: this.opp.Id OR Opportunity__c = null)
                 AND (UserRole__c = :this.userRoleName OR UserRole__c = '-- Any --')
-                AND (OpportunityType__c = :oppType OR OpportunityType__c = '-- Any --')];
+                AND (OpportunityType__c = :oppType OR OpportunityType__c = '-- Any --')
+                AND Active__c = true];
         }
         return scripts;
     }

@@ -12,7 +12,7 @@ import { refreshApex } from '@salesforce/apex';
 export default class OpportunityScript extends NavigationMixin(LightningElement) {
 
     subscription = {};
-    channelName = '/event/Opportunity_Listen__e';
+    channelName = '/event/Sales_Script__Opportunity_Listen__e';
     isSubscribed = false;
     showEditButton = false;
 

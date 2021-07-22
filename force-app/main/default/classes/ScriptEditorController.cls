@@ -258,6 +258,7 @@ public with sharing class ScriptEditorController {
     private void getTemplateTagsMDT() {
         List<String> tags = new List<String>();
         for(Script_Template_Tag__mdt templateTagObj: [SELECT Field_Name__c FROM Script_Template_Tag__mdt]) {
+            System.debug('{' + templateTagObj.Field_Name__c + '}');
             tags.add('{' + templateTagObj.Field_Name__c + '}');
         }
         templateTags = String.join(tags, '\n');
@@ -297,6 +298,7 @@ public with sharing class ScriptEditorController {
     }
 
     /** Creates new metadata records for new script tags */
+    // Note: Not deploying new custom metadata for some reason. I think it might be due to org prefix issues. Look at later.
     public void saveNewTags() {
         Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
         System.debug(tagsToAdd);
@@ -307,7 +309,7 @@ public with sharing class ScriptEditorController {
             exprComponents = ScriptTemplateHandlerHelper.removeBlanks(exprComponents);
             Metadata.CustomMetadata tagsMetadata = new Metadata.CustomMetadata();
             String label = exprComponents[1]+(exprComponents.size()==3?exprComponents[2]:'');
-            tagsMetadata.fullName = 'Script_Template_Tag.'+label;
+            tagsMetadata.fullName = 'Sales_Script__Script_Template_Tag.'+label;
             tagsMetadata.label = label;
 
             Metadata.CustomMetadataValue tagField = new Metadata.CustomMetadataValue();
@@ -322,8 +324,12 @@ public with sharing class ScriptEditorController {
 
         MetadataCallback mdCallBack = new MetadataCallback();
         if(!Test.isRunningTest() && isScriptAdmin()) {
-            Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, mdCallBack);
-            System.debug('Script Editor Tag Metadata Deployment. Job Id: ' + jobId);
+            try{
+                Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, mdCallBack);
+                System.debug('Script Editor Tag Metadata Deployment. Job Id: ' + jobId);
+            }catch(Exception e) {
+                System.debug('There was an issue saving the custom script tag...\n' + e.getMessage() + '\n' + e.getStackTraceString());
+            }
         }
         closeModal();
         templateTags += tagsToAddString;

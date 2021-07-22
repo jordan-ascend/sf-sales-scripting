@@ -25,7 +25,11 @@ public with sharing class ScriptDisplayController {
         // Sales_Rep_Script__c scriptToDeliver = getMostSpecific(scripts);
         for(String oppStage: scriptsMap.keyset()) {
             Sales_Rep_Script__c temp = scriptsMap.get(oppStage);
-            temp.Script__c = ScriptTemplateHandler.interpolateScript(temp.Script__c, oppId);
+            try{
+                temp.Script__c = ScriptTemplateHandler.interpolateScript(temp.Script__c, oppId);
+            }catch(ScriptInterpolationException e) {
+                temp.Script__c = 'A problem was encountered while reading the template tags in the script. Please check the spelling or remove the tag(s)';
+            }
             scriptsMap.put(oppStage, temp);
         }
         // scriptToDeliver.Script__c = ScriptTemplateHandler.interpolateScript(scriptToDeliver.Script__c, oppId);
